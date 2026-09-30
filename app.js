@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -34,24 +34,46 @@ document.addEventListener("DOMContentLoaded", () => {
       loginStatus.style.color = "blue";
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        loginStatus.textContent = `Đăng nhập thành công! User: ${user.email}`;
+        await signInWithEmailAndPassword(auth, email, password);
+        loginStatus.textContent = `Đăng nhập thành công!`;
         loginStatus.style.color = "green";
-
-        // Hide login, show dashboard
-        loginContainer.style.display = "none";
-        dashboardContainer.style.display = "block";
-
-        // Load data
-        loadStaffData();
-      } catch (error) {
         const errorMessage = error.message;
         loginStatus.textContent = `Lỗi đăng nhập: ${errorMessage}`;
         loginStatus.style.color = "red";
       }
     });
   }
+
+  const btnLogout = document.getElementById("btn-logout");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error("Lỗi đăng xuất:", error);
+      }
+    });
+  }
+
+  // Handle Auth State Changes
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      loginContainer.style.display = "none";
+      dashboardContainer.style.display = "block";
+      const userEmailSpan = document.getElementById("user-email");
+      if (userEmailSpan) {
+        userEmailSpan.textContent = user.email;
+      }
+      loadStaffData();
+    } else {
+      // User is signed out
+      loginContainer.style.display = "block";
+      dashboardContainer.style.display = "none";
+      loginForm.reset();
+      loginStatus.textContent = "";
+    }
+  });
 
   const addStaffForm = document.getElementById("add-staff-form");
   if (addStaffForm) {
@@ -106,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onSnapshot(canBoRef, (snapshot) => {
       staffTableBody.innerHTML = ""; // Clear current table
 
+      let index = 1;
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const docId = docSnap.id;
@@ -113,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = document.createElement("tr");
 
         row.innerHTML = `
+          <td>${index++}</td>
           <td>${data.ma_cb || ""}</td>
           <td>${data.ho_ten || ""}</td>
           <td>${data.chuc_vu || ""}</td>

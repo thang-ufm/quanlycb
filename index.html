@@ -34,7 +34,13 @@
     </div>
 
     <div id="dashboard-container" class="dashboard-container" style="display: none;">
-        <h2>Hệ Thống Quản Lý Cán Bộ</h2>
+        <div class="dashboard-header">
+            <h2>Hệ Thống Quản Lý Cán Bộ</h2>
+            <div class="user-info">
+                <span>Xin chào, <span id="user-email"></span></span>
+                <button id="btn-logout" class="btn-logout">Đăng xuất</button>
+            </div>
+        </div>
         <div class="dashboard-content">
             <div class="form-section">
                 <h3>Thêm Cán Bộ Mới</h3>
@@ -67,6 +73,7 @@
                 <table id="staff-table">
                     <thead>
                         <tr>
+                            <th>STT</th>
                             <th>Mã CB</th>
                             <th>Họ và tên</th>
                             <th>Chức vụ</th>
