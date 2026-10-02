@@ -1,0 +1,12 @@
+/* Custom overriding styles */
+.modal {
+    transition: opacity 0.25s ease;
+}
+body.modal-active {
+    overflow-x: hidden;
+    overflow-y: visible !important;
+}
+select[multiple] {
+    height: auto;
+    min-height: 60px;
+}

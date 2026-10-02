@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-700">Dashboard Quản Lý Công Việc</h1>
+    <div class="flex space-x-2">
+        <button onclick="document.getElementById('batchModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-plus mr-2"></i>Đăng ký việc tuần
+        </button>
+        <a href="/export/excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+        </a>
+    </div>
+</div>
+
+<!-- FILTER BAR PLACEHOLDER -->
+<div id="filter-bar-container" class="bg-white p-4 rounded shadow mb-6">
+    <form method="GET" action="/" class="flex flex-wrap items-end gap-4">
+        <!-- Date Range Filter (Mocked visual, minimal functionality) -->
+        <div class="flex flex-col">
+            <label class="text-xs text-gray-500 font-semibold mb-1">Khoảng thời gian</label>
+            <div class="flex items-center space-x-2">
+                <input type="date" name="start_date" class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500">
+                <span class="text-gray-400">-</span>
+                <input type="date" name="end_date" class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- Department Filter -->
+        <div class="flex flex-col min-w-[150px]">
+            <label class="text-xs text-gray-500 font-semibold mb-1">Phòng ban</label>
+            <select name="dept_filter" class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500">
+                <option value="">-- Tất cả --</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if dept_filter == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex flex-col min-w-[150px]">
+            <label class="text-xs text-gray-500 font-semibold mb-1">Trạng thái</label>
+            <select name="status_filter" class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500">
+                <option value="">-- Tất cả --</option>
+                <option value="Chờ xử lý" {% if status_filter == 'Chờ xử lý' %}selected{% endif %}>Chờ xử lý</option>
+                <option value="Đang thực hiện" {% if status_filter == 'Đang thực hiện' %}selected{% endif %}>Đang thực hiện</option>
+                <option value="Chờ duyệt" {% if status_filter == 'Chờ duyệt' %}selected{% endif %}>Chờ duyệt</option>
+                <option value="Hoàn thành" {% if status_filter == 'Hoàn thành' %}selected{% endif %}>Hoàn thành</option>
+            </select>
+        </div>
+
+        <!-- My Tasks -->
+        <div class="flex flex-col justify-end">
+            <label class="flex items-center space-x-2 cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded border border-gray-300">
+                <input type="checkbox" name="my_tasks_user_id" value="{{ current_user.id if current_user else '' }}" {% if my_tasks_user_id %}checked{% endif %} class="form-checkbox text-blue-600 rounded" onchange="this.form.submit()">
+                <span class="text-sm font-medium text-gray-700">📌 Công việc của tôi</span>
+            </label>
+        </div>
+
+        <!-- Submit Filter -->
+        <div class="flex flex-col justify-end ml-auto">
+            <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-1.5 px-4 rounded shadow text-sm transition">
+                <i class="fas fa-filter mr-1"></i> Lọc
+            </button>
+            <a href="/" class="text-xs text-blue-600 hover:underline mt-1 text-center">Xóa lọc</a>
+        </div>
+    </form>
+</div>
+
+<!-- DATA TABLE -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full leading-normal">
+        <thead>
+            <tr>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
+                    STT
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">
+                    Tên công việc
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Đơn vị chủ trì
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Người thực hiện
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                    Ưu tiên
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Trạng thái
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Tiến độ & Minh chứng
+                </th>
+                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Hạn chót
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr class="hover:bg-gray-50 transition duration-150">
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">{{ task.id }}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 font-medium">{{ task.title }}</p>
+                    {% if task.description %}
+                    <p class="text-gray-500 text-xs mt-1 truncate max-w-xs">{{ task.description }}</p>
+                    {% endif %}
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    {% if task.department %}
+                        {% set bg_color = 'bg-gray-200 text-gray-800' %}
+                        {% if 'Tím' in task.department.theme %}
+                            {% set bg_color = 'bg-purple-100 text-purple-800 border-purple-200' %}
+                        {% elif 'Xanh lá' in task.department.theme %}
+                            {% set bg_color = 'bg-emerald-100 text-emerald-800 border-emerald-200' %}
+                        {% elif 'Xanh dương' in task.department.theme %}
+                            {% set bg_color = 'bg-blue-100 text-blue-800 border-blue-200' %}
+                        {% endif %}
+                        <span class="inline-block px-2 py-1 font-semibold text-xs rounded border {{ bg_color }}">
+                            {{ task.department.name }}
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    {% if task.assignee %}
+                        <div class="mb-1"><span class="font-bold border border-gray-300 rounded px-1 text-xs bg-gray-100" title="Phụ trách chính">Chính</span> {{ task.assignee.full_name }}</div>
+                    {% endif %}
+                    {% for collab in task.collaborators %}
+                        <div class="text-gray-600 text-xs"><i class="fas fa-users mr-1"></i>{{ collab.user.full_name }}</div>
+                    {% endfor %}
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    {% set p_color = 'text-gray-600' %}
+                    {% if task.priority == 'Quan trọng' %}{% set p_color = 'text-red-600 font-bold' %}
+                    {% elif task.priority == 'Cao' %}{% set p_color = 'text-orange-500 font-bold' %}
+                    {% endif %}
+                    <p class="{{ p_color }} whitespace-no-wrap">{{ task.priority }}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    {% set s_bg = 'bg-gray-200 text-gray-800' %}
+                    {% if task.status == 'Chờ xử lý' %}{% set s_bg = 'bg-yellow-100 text-yellow-800' %}
+                    {% elif task.status == 'Đang thực hiện' %}{% set s_bg = 'bg-blue-100 text-blue-800' %}
+                    {% elif task.status == 'Chờ duyệt' %}{% set s_bg = 'bg-orange-100 text-orange-800' %}
+                    {% elif task.status == 'Hoàn thành' %}{% set s_bg = 'bg-green-100 text-green-800' %}
+                    {% endif %}
+                    <span class="relative inline-block px-3 py-1 font-semibold {{ s_bg }} leading-tight rounded-full">
+                        <span class="relative">{{ task.status }}</span>
+                    </span>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 max-w-[100px]">
+                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ task.progress }}%"></div>
+                        </div>
+                        <span class="text-xs font-semibold">{{ task.progress }}%</span>
+                    </div>
+                    {% if task.evidence_link %}
+                    <div class="mt-2">
+                        <a href="{{ task.evidence_link }}" target="_blank" class="text-blue-500 hover:text-blue-700" title="Xem minh chứng">
+                            <i class="fab fa-google-drive fa-lg"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    {% if task.deadline %}
+                    <p class="text-gray-900 whitespace-no-wrap">{{ task.deadline.strftime('%d/%m/%Y') }}</p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="px-5 py-10 border-b border-gray-200 text-center text-gray-500">
+                    Không có dữ liệu công việc.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="px-5 py-5 bg-white border-t flex flex-col xs:flex-row items-center xs:justify-between">
+        <span class="text-xs xs:text-sm text-gray-900">
+            Trang {{ page }} / {{ total_pages if total_pages > 0 else 1 }}
+        </span>
+        <div class="inline-flex mt-2 xs:mt-0">
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}&dept_filter={{ dept_filter or '' }}&status_filter={{ status_filter or '' }}&my_tasks_user_id={{ my_tasks_user_id or '' }}" class="text-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-l">
+                Trước
+            </a>
+            {% else %}
+            <button disabled class="text-sm bg-gray-200 text-gray-500 font-semibold py-2 px-4 rounded-l cursor-not-allowed">Trước</button>
+            {% endif %}
+
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}&dept_filter={{ dept_filter or '' }}&status_filter={{ status_filter or '' }}&my_tasks_user_id={{ my_tasks_user_id or '' }}" class="text-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-r">
+                Sau
+            </a>
+            {% else %}
+            <button disabled class="text-sm bg-gray-200 text-gray-500 font-semibold py-2 px-4 rounded-r cursor-not-allowed">Sau</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- BATCH MODAL PLACEHOLDER -->
+<div id="batchModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl leading-6 font-bold text-gray-900">Đăng ký công việc theo tuần</h3>
+                <button onclick="document.getElementById('batchModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+
+            <form id="batchTaskForm">
+                <div class="mb-4 flex space-x-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tuần làm việc</label>
+                        <input type="week" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" required>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border" id="taskTable">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase w-1/4">Tên công việc *</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Mô tả</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Phòng ban *</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Người PT chính *</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Người phối hợp</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Ưu tiên *</th>
+                                <th class="py-2 px-3 border-b text-left text-xs font-semibold text-gray-600 uppercase">Hạn chót *</th>
+                                <th class="py-2 px-3 border-b text-center text-xs font-semibold text-gray-600 uppercase w-12">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taskTableBody">
+                            <!-- Rows will be added dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 flex justify-between">
+                    <button type="button" onclick="addTaskRow()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded inline-flex items-center text-sm">
+                        <i class="fas fa-plus mr-2"></i> Thêm dòng
+                    </button>
+                    <div class="space-x-2">
+                        <button type="button" onclick="document.getElementById('batchModal').classList.add('hidden')" class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow text-sm">
+                            Hủy
+                        </button>
+                        <button type="button" onclick="submitBatchTasks()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow text-sm">
+                            Lưu danh sách
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DATA FOR JS -->
+<script>
+    const departmentsData = [
+        {% for dept in departments %}
+        {id: {{ dept.id }}, name: "{{ dept.name }}"}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const usersData = [
+        {% for user in users %}
+        {id: {{ user.id }}, name: "{{ user.full_name }}"}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+
+{% endblock %}
