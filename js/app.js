@@ -26,6 +26,7 @@ export const statusMap = {
 
 // Global state
 let allTasks = {};
+let allUsers = {};
 let currentUser = null;
 
 // --- INITIALIZATION ---
@@ -53,9 +54,17 @@ function setupRBACUI() {
     if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG') {
         const btnReg = document.createElement('button');
         btnReg.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition flex items-center';
-        btnReg.innerHTML = '<i class="fas fa-plus mr-2"></i> Đăng ký tuần';
+        btnReg.innerHTML = '<i class="fas fa-plus mr-2"></i> Đăng ký';
         btnReg.addEventListener('click', openWeeklyTaskModal);
         actionButtons.appendChild(btnReg);
+    }
+
+    if (currentUser.role === 'BGD') {
+        const btnAssign = document.createElement('button');
+        btnAssign.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition flex items-center';
+        btnAssign.innerHTML = '<i class="fas fa-plus mr-2"></i> Giao việc';
+        btnAssign.addEventListener('click', openAssignTaskModal);
+        actionButtons.appendChild(btnAssign);
     }
 }
 
@@ -66,6 +75,11 @@ function fetchData() {
         const data = snapshot.val();
         allTasks = data || {};
         renderTable();
+    });
+
+    const usersRef = ref(database, 'users');
+    onValue(usersRef, (snapshot) => {
+        allUsers = snapshot.val() || {};
     });
 }
 
@@ -96,11 +110,24 @@ function openWeeklyTaskModal() {
 function addWeeklyTaskRow() {
     const tr = document.createElement('tr');
     const index = batchTaskRows.children.length + 1;
+
+    let subOptions = '';
+    for (const key in allUsers) {
+        const u = allUsers[key];
+        if (u.deptCode === 'HCTV' || u.deptCode === 'DT_KH_QLSV') {
+            subOptions += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+        }
+    }
+
     tr.innerHTML = `
         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500">${index}</td>
         <td class="px-2 py-2"><input type="text" class="w-full border-gray-300 rounded text-sm task-name" required></td>
-        <td class="px-2 py-2"><input type="text" class="w-full border-gray-300 rounded text-sm task-main" required placeholder="VD: Nguyễn Văn A"></td>
-        <td class="px-2 py-2"><input type="text" class="w-full border-gray-300 rounded text-sm task-sub" placeholder="VD: Trần B, Lê C"></td>
+        <td class="px-2 py-2"><input type="text" class="w-full bg-gray-100 border-gray-300 rounded text-sm task-main text-gray-600" required readonly value="${currentUser.fullName}"></td>
+        <td class="px-2 py-2">
+            <select multiple class="w-full border-gray-300 rounded text-sm task-sub" size="2">
+                ${subOptions}
+            </select>
+        </td>
         <td class="px-2 py-2">
             <select class="w-full border-gray-300 rounded text-sm task-priority">
                 <option value="Bình thường">Bình thường</option>
@@ -133,8 +160,21 @@ function updateRowIndices() {
 btnAddRow.addEventListener('click', addWeeklyTaskRow);
 
 btnSubmitWeekly.addEventListener('click', async () => {
-    const week = document.getElementById('weekSelection').value;
-    if(!week) { alert('Vui lòng chọn tuần.'); return; }
+    const regType = document.getElementById('regTypeSelection').value;
+    let periodValue = '';
+
+    if (regType === 'week') {
+        periodValue = document.getElementById('weekSelection').value;
+        if(!periodValue) { alert('Vui lòng chọn tuần.'); return; }
+    } else if (regType === 'month') {
+        periodValue = document.getElementById('monthSelection').value;
+        if(!periodValue) { alert('Vui lòng chọn tháng.'); return; }
+    } else if (regType === 'quarter') {
+        const q = document.getElementById('quarterSelection').value;
+        const y = document.getElementById('quarterYearSelection').value;
+        if(!y) { alert('Vui lòng nhập năm cho quý.'); return; }
+        periodValue = `${q}-${y}`;
+    }
 
     const rows = batchTaskRows.querySelectorAll('tr');
     let hasError = false;
@@ -143,7 +183,11 @@ btnSubmitWeekly.addEventListener('click', async () => {
     rows.forEach(row => {
         const name = row.querySelector('.task-name').value.trim();
         const main = row.querySelector('.task-main').value.trim();
-        const sub = row.querySelector('.task-sub').value.trim();
+
+        const subSelect = row.querySelector('.task-sub');
+        const selectedSubs = Array.from(subSelect.selectedOptions).map(opt => opt.value);
+        const sub = selectedSubs.join(', ');
+
         const priority = row.querySelector('.task-priority').value;
         const deadline = row.querySelector('.task-deadline').value;
 
@@ -154,7 +198,7 @@ btnSubmitWeekly.addEventListener('click', async () => {
 
         tasksToPush.push({
             name,
-            week,
+            week: periodValue, // Keep property name 'week' for backward compatibility or change to 'period' if needed
             deptCode: currentUser.deptCode,
             host: currentUser.deptCode === 'BGD' ? 'Ban Giám đốc' : deptCodeMap[currentUser.deptCode],
             mainAssignee: main,
@@ -187,12 +231,101 @@ btnSubmitWeekly.addEventListener('click', async () => {
     }
 });
 
+function openAssignTaskModal() {
+    const modal = document.getElementById('modalAssignTask');
+    modal.classList.remove('hidden');
+    document.getElementById('formAssignTask').reset();
+    populateAssignTarget();
+}
+
+function populateAssignTarget() {
+    const assignType = document.getElementById('assignType').value;
+    const assignTarget = document.getElementById('assignTarget');
+    assignTarget.innerHTML = '';
+
+    if (assignType === 'PHONG') {
+        for (const code in deptCodeMap) {
+            assignTarget.innerHTML += `<option value="${code}">${deptCodeMap[code]}</option>`;
+        }
+    } else {
+        for (const key in allUsers) {
+            const u = allUsers[key];
+            assignTarget.innerHTML += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+        }
+    }
+}
+
+document.getElementById('assignType')?.addEventListener('change', populateAssignTarget);
+
+document.getElementById('btnSubmitAssign')?.addEventListener('click', async () => {
+    const type = document.getElementById('assignType').value;
+    const target = document.getElementById('assignTarget').value;
+    const name = document.getElementById('assignTaskName').value.trim();
+    const priority = document.getElementById('assignPriority').value;
+    const deadline = document.getElementById('assignDeadline').value;
+
+    if (!name || !deadline) {
+        alert('Vui lòng nhập đầy đủ thông tin Tên công việc và Hạn chót!');
+        return;
+    }
+
+    const task = {
+        name,
+        week: 'Giao trực tiếp', // Default placeholder if week is strictly needed
+        deptCode: type === 'PHONG' ? target : 'ALL',
+        host: 'Ban Giám đốc',
+        mainAssignee: type === 'CA_NHAN' ? target : `Toàn ${deptCodeMap[target] || target}`,
+        subAssignees: '',
+        priority,
+        deadline,
+        status: 'DANG_THUC_HIEN',
+        progress: 0,
+        evidenceUrl: '',
+        feedback: '',
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        await push(ref(database, 'tasks'), task);
+        alert('Giao việc thành công!');
+        document.getElementById('modalAssignTask').classList.add('hidden');
+    } catch (e) {
+        console.error("Error creating task: ", e);
+        alert('Có lỗi xảy ra khi tạo công việc mới.');
+    }
+});
+
 function setupModals() {
+    // Event listener cho Select regTypeSelection trong formWeeklyTask
+    document.getElementById('regTypeSelection')?.addEventListener('change', function() {
+        const type = this.value;
+        const weekInput = document.getElementById('weekSelection');
+        const monthInput = document.getElementById('monthSelection');
+        const quarterContainer = document.getElementById('quarterSelectionContainer');
+
+        weekInput.classList.add('hidden');
+        monthInput.classList.add('hidden');
+        quarterContainer.classList.add('hidden');
+
+        if(type === 'week') {
+            weekInput.classList.remove('hidden');
+        } else if (type === 'month') {
+            monthInput.classList.remove('hidden');
+        } else if (type === 'quarter') {
+            quarterContainer.classList.remove('hidden');
+            quarterContainer.classList.add('flex');
+        }
+    });
+
     // Close modal handlers
     document.querySelectorAll('.btn-close-modal').forEach(btn => {
         btn.addEventListener('click', () => {
             modalWeeklyTask.classList.add('hidden');
             document.getElementById('modalEditTask').classList.add('hidden');
+            const assignModal = document.getElementById('modalAssignTask');
+            if (assignModal) assignModal.classList.add('hidden');
+            const exportModal = document.getElementById('modalExportExcel');
+            if (exportModal) exportModal.classList.add('hidden');
         });
     });
 }
@@ -388,22 +521,119 @@ document.getElementById('btnRejectTask').addEventListener('click', async () => {
 // --- EXPORT TO EXCEL ---
 function setupExport() {
     document.getElementById('btnExportExcel').addEventListener('click', () => {
-        const table = document.getElementById('tasksTable');
-        // Clone table to manipulate for export (remove action column)
-        const cloneTable = table.cloneNode(true);
+        document.getElementById('modalExportExcel').classList.remove('hidden');
+    });
 
-        // Remove the last column (Thao tác) from header and body
-        const ths = cloneTable.querySelectorAll('th');
-        if(ths.length > 0) ths[ths.length-1].remove();
+    document.getElementById('exportTimeRange')?.addEventListener('change', function() {
+        const customRange = document.getElementById('exportCustomRange');
+        if (this.value === 'CUSTOM') {
+            customRange.classList.remove('hidden');
+        } else {
+            customRange.classList.add('hidden');
+        }
+    });
 
-        const trs = cloneTable.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const tds = tr.querySelectorAll('td');
-            if(tds.length > 0) tds[tds.length-1].remove();
-        });
+    document.getElementById('btnConfirmExport')?.addEventListener('click', () => {
+        const timeRange = document.getElementById('exportTimeRange').value;
+        const startDate = document.getElementById('exportStartDate').value;
+        const endDate = document.getElementById('exportEndDate').value;
 
-        const wb = XLSX.utils.table_to_book(cloneTable, {sheet:"Tasks"});
+        // Custom time range validation
+        let startObj = null, endObj = null;
+        if (timeRange === 'CUSTOM') {
+            if (!startDate || !endDate) {
+                alert('Vui lòng chọn Từ ngày và Đến ngày');
+                return;
+            }
+            startObj = new Date(startDate);
+            endObj = new Date(endDate);
+            endObj.setHours(23, 59, 59, 999);
+        }
+
+        const dataToExport = [];
+        let index = 1;
+
+        for (const [taskId, task] of Object.entries(allTasks)) {
+            // RBAC Filter
+            if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
+                if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+                    if (task.deptCode !== currentUser.deptCode) continue;
+                } else if (currentUser.role === 'NHAN_VIEN') {
+                    if (task.mainAssignee !== currentUser.fullName && (!task.subAssignees || !task.subAssignees.includes(currentUser.fullName))) {
+                        continue;
+                    }
+                }
+            }
+
+            // Time Filter
+            let taskDateStr = task.createdAt || task.deadline;
+            if (!taskDateStr) continue;
+            let taskDate = new Date(taskDateStr);
+            let inRange = false;
+            let today = new Date();
+
+            if (timeRange === 'ALL') {
+                inRange = true; // Fallback
+            } else if (timeRange === 'WEEK') {
+                const dayNum = today.getUTCDay() || 7;
+                today.setUTCDate(today.getUTCDate() + 4 - dayNum);
+                const yearStart = new Date(Date.UTC(today.getUTCFullYear(),0,1));
+                const weekNoCurrent = Math.ceil((((today - yearStart) / 86400000) + 1)/7);
+
+                let taskD = new Date(taskDateStr);
+                const taskDayNum = taskD.getUTCDay() || 7;
+                taskD.setUTCDate(taskD.getUTCDate() + 4 - taskDayNum);
+                const taskYearStart = new Date(Date.UTC(taskD.getUTCFullYear(),0,1));
+                const weekNoTask = Math.ceil((((taskD - taskYearStart) / 86400000) + 1)/7);
+
+                if(weekNoTask === weekNoCurrent && taskD.getUTCFullYear() === today.getUTCFullYear()) inRange = true;
+
+            } else if (timeRange === 'MONTH') {
+                if (taskDate.getMonth() === today.getMonth() && taskDate.getFullYear() === today.getFullYear()) {
+                    inRange = true;
+                }
+            } else if (timeRange === 'QUARTER') {
+                const currentQuarter = Math.floor(today.getMonth() / 3) + 1;
+                const taskQuarter = Math.floor(taskDate.getMonth() / 3) + 1;
+                if (taskQuarter === currentQuarter && taskDate.getFullYear() === today.getFullYear()) {
+                    inRange = true;
+                }
+            } else if (timeRange === 'CUSTOM') {
+                if (taskDate >= startObj && taskDate <= endObj) {
+                    inRange = true;
+                }
+            }
+
+            if (!inRange) continue;
+
+            const evidenceCell = task.evidenceUrl || '';
+            const statusText = statusMap[task.status] ? statusMap[task.status].text : task.status;
+            const deptText = deptCodeMap[task.deptCode] || task.deptCode;
+
+            dataToExport.push({
+                "STT": index++,
+                "Tên công việc": task.name,
+                "Đơn vị chủ trì": deptText,
+                "Người thực hiện": task.mainAssignee + (task.subAssignees ? ` (Phối hợp: ${task.subAssignees})` : ''),
+                "Ưu tiên": task.priority,
+                "Trạng thái": statusText,
+                "Tiến độ (%)": task.progress || 0,
+                "Minh chứng": evidenceCell,
+                "Hạn chót": task.deadline
+            });
+        }
+
+        if (dataToExport.length === 0) {
+            alert('Không có dữ liệu trong khoảng thời gian đã chọn.');
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tasks");
         XLSX.writeFile(wb, "DanhSachCongViec.xlsx");
+
+        document.getElementById('modalExportExcel').classList.add('hidden');
     });
 }
 
