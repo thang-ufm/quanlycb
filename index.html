@@ -23,31 +23,36 @@
     <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gray-200 hidden">
         <div class="bg-white p-8 rounded-lg shadow-md w-96">
             <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-blue-800 mb-2">HỆ THỐNG QUẢN LÝ CÔNG VIỆC</h1>
-                <p class="text-gray-600">Phân hiệu UFM tại Quảng Ngãi</p>
+                <h1 class="text-xl font-bold text-blue-800 mb-2 uppercase">Phân hiệu trường Đại học<br>Tài chính – Marketing<br>tại tỉnh Quảng Ngãi</h1>
+                <p class="text-gray-600 font-semibold mt-2 border-t pt-2">HỆ THỐNG QUẢN LÝ CÔNG VIỆC</p>
             </div>
 
             <form id="loginForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tài khoản (Role Demo)</label>
-                    <select id="loginRole" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border">
-                        <option value="BGD">Ban Giám đốc</option>
-                        <option value="TRUONG_PHONG">Trưởng/Phó Phòng</option>
-                        <option value="NHAN_VIEN">Nhân viên</option>
-                    </select>
+                <div id="loginError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
+                    <span class="block sm:inline"></span>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Phòng ban (cho NV/TP)</label>
-                    <select id="loginDept" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border">
-                        <option value="BGD">Ban Giám đốc</option>
-                        <option value="PDT">Phòng Đào tạo - KH & QLSV</option>
-                        <option value="PHC">Phòng Hành chính – Tài vụ</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="loginEmail" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập email...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                    <input type="password" id="loginPassword" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập mật khẩu...">
                 </div>
                 <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Đăng nhập
                 </button>
             </form>
+
+            <div class="mt-6 border-t pt-4">
+                <p class="text-xs text-gray-500 mb-2 text-center">Tài khoản trải nghiệm nhanh:</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="document.getElementById('loginEmail').value='thangtcnb@gmail.com'; document.getElementById('loginPassword').value='123456';" class="bg-gray-100 hover:bg-gray-200 py-1 px-2 rounded">Super Admin</button>
+                    <button onclick="document.getElementById('loginEmail').value='yenlinhbt@ufm.edu.vn'; document.getElementById('loginPassword').value='123';" class="bg-gray-100 hover:bg-gray-200 py-1 px-2 rounded">Ban Giám đốc</button>
+                    <button onclick="document.getElementById('loginEmail').value='tranthibichlien@ufm.edu.vn'; document.getElementById('loginPassword').value='123';" class="bg-gray-100 hover:bg-gray-200 py-1 px-2 rounded">Trưởng phòng HCTV</button>
+                    <button onclick="document.getElementById('loginEmail').value='tathiquynhngoc@ufm.edu.vn'; document.getElementById('loginPassword').value='123';" class="bg-gray-100 hover:bg-gray-200 py-1 px-2 rounded">Nhân viên ĐT-KH-QLSV</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -86,13 +91,14 @@
                                 <option value="ALL">Tất cả phòng ban</option>
                                 <option value="MY_TASKS">📌 Công việc của tôi</option>
                                 <option value="BGD">Ban Giám đốc</option>
-                                <option value="PDT">Phòng Đào tạo - KH & QLSV</option>
-                                <option value="PHC">Phòng Hành chính – Tài vụ</option>
+                                <option value="DT_KH_QLSV">Phòng Đào tạo - KH & QLSV</option>
+                                <option value="HCTV">Phòng Hành chính – Tài vụ</option>
                             </select>
                         </div>
                         <div class="relative">
                             <select id="filterStatus" class="pl-3 pr-8 py-1.5 border rounded text-sm focus:ring-blue-500 focus:border-blue-500">
                                 <option value="ALL">Tất cả trạng thái</option>
+                                <option value="CHO_DUYET">Chờ duyệt</option>
                                 <option value="CHO_BGD_DUYET">Chờ BGD Duyệt</option>
                                 <option value="DANG_THUC_HIEN">Đang thực hiện</option>
                                 <option value="YEU_CAU_SUA">Yêu cầu sửa</option>
@@ -224,6 +230,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Trạng thái</label>
                                 <select id="editStatus" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" disabled>
+                                    <option value="CHO_DUYET">Chờ duyệt</option>
                                     <option value="CHO_BGD_DUYET">Chờ BGD Duyệt</option>
                                     <option value="DANG_THUC_HIEN">Đang thực hiện</option>
                                     <option value="YEU_CAU_SUA">Yêu cầu sửa</option>
