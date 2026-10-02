@@ -116,7 +116,9 @@ function addWeeklyTaskRow() {
     for (const key in allUsers) {
         const u = allUsers[key];
         if (u.deptCode === 'HCTV' || u.deptCode === 'DT_KH_QLSV') {
-            subOptions += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+            subOptions += `<label class="block px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm">
+                <input type="checkbox" class="mr-2 task-sub-checkbox" value="${u.fullName}">${u.fullName} (${u.deptCode})
+            </label>`;
         }
     }
 
@@ -125,9 +127,15 @@ function addWeeklyTaskRow() {
         <td class="px-2 py-2"><input type="text" class="w-full border-gray-300 rounded text-sm task-name" required></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-gray-100 border-gray-300 rounded text-sm task-main text-gray-600" required readonly value="${currentUser.fullName}"></td>
         <td class="px-2 py-2">
-            <select multiple class="w-full border-gray-300 rounded text-sm task-sub" size="2">
-                ${subOptions}
-            </select>
+            <div class="relative custom-dropdown-container">
+                <button type="button" class="w-full border border-gray-300 rounded text-sm py-1 px-2 text-left bg-white text-gray-700 toggle-dropdown flex justify-between items-center">
+                    <span>Chọn...</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+                <div class="absolute z-10 hidden bg-white border border-gray-300 mt-1 max-h-32 overflow-y-auto w-full shadow-lg dropdown-menu rounded-md">
+                    ${subOptions}
+                </div>
+            </div>
         </td>
         <td class="px-2 py-2">
             <select class="w-full border-gray-300 rounded text-sm task-priority">
@@ -149,8 +157,46 @@ function addWeeklyTaskRow() {
             alert('Phải có ít nhất 1 dòng công việc.');
         }
     });
+
+    // Toggle dropdown logic
+    const dropdownBtn = tr.querySelector('.toggle-dropdown');
+    const dropdownMenu = tr.querySelector('.dropdown-menu');
+    dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        // Close other dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            if (menu !== dropdownMenu) menu.classList.add('hidden');
+        });
+
+        dropdownMenu.classList.toggle('hidden');
+    });
+
+    // Update dropdown button text when checkboxes change
+    const checkboxes = tr.querySelectorAll('.task-sub-checkbox');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            const checkedCount = tr.querySelectorAll('.task-sub-checkbox:checked').length;
+            const btnTextSpan = dropdownBtn.querySelector('span');
+            if (checkedCount === 0) {
+                btnTextSpan.textContent = 'Chọn...';
+            } else {
+                btnTextSpan.textContent = `Đã chọn ${checkedCount}`;
+            }
+        });
+    });
+
     batchTaskRows.appendChild(tr);
 }
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-dropdown-container')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
 
 function updateRowIndices() {
     Array.from(batchTaskRows.children).forEach((tr, index) => {
@@ -185,8 +231,8 @@ btnSubmitWeekly.addEventListener('click', async () => {
         const name = row.querySelector('.task-name').value.trim();
         const main = row.querySelector('.task-main').value.trim();
 
-        const subSelect = row.querySelector('.task-sub');
-        const selectedSubs = Array.from(subSelect.selectedOptions).map(opt => opt.value);
+        const checkedBoxes = row.querySelectorAll('.task-sub-checkbox:checked');
+        const selectedSubs = Array.from(checkedBoxes).map(cb => cb.value);
         const sub = selectedSubs.join(', ');
 
         const priority = row.querySelector('.task-priority').value;
@@ -357,12 +403,48 @@ function setupModals() {
 window.openWeeklyTaskModal = openWeeklyTaskModal;
 
 // --- FILTERING & RENDERING TABLE ---
-const filterDept = document.getElementById('filterDept');
+let currentTab = 'MY_TASKS';
 const filterStatus = document.getElementById('filterStatus');
 
 function setupFilters() {
-    filterDept.addEventListener('change', renderTable);
     filterStatus.addEventListener('change', renderTable);
+}
+
+function renderTabs(myTasksCount) {
+    const tabsContainer = document.getElementById('filterDeptTabs');
+    if (!tabsContainer) return;
+    tabsContainer.innerHTML = '';
+
+    const tabsData = [
+        { id: 'MY_TASKS', label: `📌 Công việc của tôi`, badge: myTasksCount },
+        { id: 'HCTV', label: 'Phòng Hành chính – Tài vụ' },
+        { id: 'DT_KH_QLSV', label: 'Phòng Đào tạo - KH & QLSV' }
+    ];
+
+    if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN') {
+        tabsData.push({ id: 'ALL', label: 'Toàn Phân hiệu' });
+    }
+
+    tabsData.forEach(tab => {
+        const btn = document.createElement('button');
+        const isActive = currentTab === tab.id;
+
+        let badgeHtml = '';
+        if (tab.badge !== undefined && tab.badge > 0) {
+            badgeHtml = `<span class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${tab.badge}</span>`;
+        }
+
+        btn.innerHTML = `${tab.label} ${badgeHtml}`;
+        btn.className = `whitespace-nowrap px-4 py-2 font-medium text-sm transition-colors duration-150 outline-none
+            ${isActive ? 'border-b-2 border-blue-600 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent'}`;
+
+        btn.onclick = () => {
+            currentTab = tab.id;
+            renderTable();
+        };
+
+        tabsContainer.appendChild(btn);
+    });
 }
 
 function renderTable() {
@@ -374,7 +456,7 @@ function renderTable() {
         return;
     }
 
-    const dFilter = filterDept.value;
+    const dFilter = currentTab;
     const sFilter = filterStatus.value;
 
     let index = 1;
@@ -415,7 +497,7 @@ function renderTable() {
         }
 
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50';
+        tr.className = index % 2 === 0 ? 'bg-slate-50 hover:bg-slate-100' : 'bg-white hover:bg-slate-50';
 
         const badgeColor = deptColorMap[task.deptCode] || 'bg-gray-100 text-gray-800';
         const deptName = deptCodeMap[task.deptCode] || task.deptCode;
@@ -474,11 +556,8 @@ function renderTable() {
         tbody.appendChild(tr);
     }
 
-    // Update filter text for MY_TASKS badge
-    const myTasksOption = filterDept.querySelector('option[value="MY_TASKS"]');
-    if (myTasksOption) {
-        myTasksOption.textContent = `📌 Công việc của tôi (${myTasksCount})`;
-    }
+    // Update tabs with badge count
+    renderTabs(myTasksCount);
 }
 
 // --- EDIT MODAL LOGIC ---
@@ -511,29 +590,37 @@ window.openEditModal = function(taskId) {
     btnReject.classList.add('hidden');
     feedbackArea.classList.add('hidden');
 
+    // Check if the current user is an assignee
+    const primary = task.primaryAssignee || task.mainAssignee || '';
+    const secondary = task.secondaryAssignees || task.subAssignees || '';
+    const isMyTask = primary === currentUser.fullName || primary === currentUser.email ||
+                     secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email);
+
     // RBAC for editing
     if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
         if (task.status === 'DANG_THUC_HIEN' || task.status === 'YEU_CAU_SUA') {
             document.getElementById('editProgress').disabled = false;
-            document.getElementById('editEvidence').disabled = false;
-
             // Allow changing status to complete if progress is 100
             document.getElementById('editStatus').disabled = false;
+            btnSave.classList.remove('hidden');
+        }
 
+        // Always allow editing evidence for assignee
+        if (isMyTask || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+            document.getElementById('editEvidence').disabled = false;
             btnSave.classList.remove('hidden');
         }
     }
 
     if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+        // Always show feedback area for managers
+        feedbackArea.classList.remove('hidden');
+        document.getElementById('editFeedback').disabled = false;
+        btnSave.classList.remove('hidden');
+
         if (task.status === 'CHO_DUYET' || task.status === 'CHO_BGD_DUYET') {
             btnApprove.classList.remove('hidden');
             btnReject.classList.remove('hidden');
-            feedbackArea.classList.remove('hidden');
-            document.getElementById('editFeedback').disabled = false;
-        }
-        if (task.status === 'YEU_CAU_SUA' || task.status === 'HOAN_THANH') {
-             feedbackArea.classList.remove('hidden');
-             document.getElementById('editFeedback').disabled = true;
         }
     }
 
@@ -545,11 +632,12 @@ document.getElementById('btnSaveTask').addEventListener('click', async () => {
     const progress = document.getElementById('editProgress').value;
     const evidenceUrl = document.getElementById('editEvidence').value;
     let status = document.getElementById('editStatus').value;
+    const feedback = document.getElementById('editFeedback').value;
 
     if (parseInt(progress) === 100) status = 'HOAN_THANH';
 
     try {
-        await update(ref(database, 'tasks/' + taskId), { progress, evidenceUrl, status });
+        await update(ref(database, 'tasks/' + taskId), { progress, evidenceUrl, status, feedback });
         document.getElementById('modalEditTask').classList.add('hidden');
     } catch (e) { console.error(e); alert('Error updating task'); }
 });

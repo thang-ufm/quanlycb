@@ -63,8 +63,8 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-graduation-cap text-2xl mr-3"></i>
-                        <span class="font-bold text-lg hidden sm:block">PHÂN HIỆU QUẢNG NGÃI – CHƯƠNG TRÌNH QUẢN LÝ CÔNG VIỆC</span>
+                        <i class="fas fa-shield-halved text-2xl mr-3"></i>
+                        <span class="font-bold text-lg block">PHÂN HIỆU QUẢNG NGÃI – CHƯƠNG TRÌNH QUẢN LÝ CÔNG VIỆC</span>
                     </div>
                     <div class="flex items-center space-x-4">
                         <span id="userInfo" class="text-sm">Xin chào, <b>[Role]</b></span>
@@ -84,32 +84,26 @@
                     </div>
 
                     <!-- Filters -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500"><i class="fas fa-filter"></i></span>
-                            <select id="filterDept" class="pl-8 pr-8 py-1.5 border rounded text-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="ALL">Tất cả phòng ban</option>
-                                <option value="MY_TASKS">📌 Công việc của tôi</option>
-                                <option value="BGD">Ban Giám đốc</option>
-                                <option value="DT_KH_QLSV">Phòng Đào tạo - KH & QLSV</option>
-                                <option value="HCTV">Phòng Hành chính – Tài vụ</option>
-                            </select>
+                    <div class="flex flex-col w-full gap-2">
+                        <div id="filterDeptTabs" class="flex space-x-2 border-b-2 border-gray-200 w-full mb-2 overflow-x-auto">
+                            <!-- Tabs will be injected here -->
                         </div>
-                        <div class="relative">
-                            <select id="filterStatus" class="pl-3 pr-8 py-1.5 border rounded text-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="ALL">Tất cả trạng thái</option>
-                                <option value="MOI_GIAO">Mới giao</option>
-                                <option value="CHO_DUYET">Chờ duyệt</option>
-                                <option value="CHO_BGD_DUYET">Chờ BGD Duyệt</option>
-                                <option value="DANG_THUC_HIEN">Đang thực hiện</option>
-                                <option value="YEU_CAU_SUA">Yêu cầu sửa</option>
-                                <option value="HOAN_THANH">Hoàn thành</option>
-                            </select>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="relative">
+                                <select id="filterStatus" class="pl-3 pr-8 py-1.5 border rounded text-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="ALL">Tất cả trạng thái</option>
+                                    <option value="MOI_GIAO">Mới giao</option>
+                                    <option value="CHO_DUYET">Chờ duyệt</option>
+                                    <option value="CHO_BGD_DUYET">Chờ BGD Duyệt</option>
+                                    <option value="DANG_THUC_HIEN">Đang thực hiện</option>
+                                    <option value="YEU_CAU_SUA">Yêu cầu sửa</option>
+                                    <option value="HOAN_THANH">Hoàn thành</option>
+                                </select>
+                            </div>
+                            <button id="btnExportExcel" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm transition shadow-sm flex items-center">
+                                <i class="fas fa-file-excel mr-1"></i> Xuất Excel
+                            </button>
                         </div>
-                        <button id="btnExportExcel" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm transition shadow-sm flex items-center">
-                            <i class="fas fa-file-excel mr-1"></i> Xuất Excel
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -119,17 +113,17 @@
             <div class="bg-white shadow rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200" id="tasksTable">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-blue-900">
                             <tr>
-                                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 text-center">STT</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên công việc</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đơn vị chủ trì</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người thực hiện</th>
-                                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ưu tiên</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Tiến độ & MC</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Hạn chót</th>
-                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Thao tác</th>
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-12 text-center">STT</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tên công việc</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Đơn vị chủ trì</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Người thực hiện</th>
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Ưu tiên</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Trạng thái</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-32">Tiến độ & MC</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider w-24">Hạn chót</th>
+                                <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-white uppercase tracking-wider w-16">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="tasksTableBody" class="bg-white divide-y divide-gray-200">
@@ -280,8 +274,8 @@
                     </form>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" id="btnSaveTask" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm hidden">
-                        Lưu thay đổi
+                    <button type="button" id="btnSaveTask" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm hidden">
+                        Lưu cập nhật
                     </button>
                     <!-- Special buttons for Manager approval -->
                     <button type="button" id="btnApproveTask" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm hidden">
