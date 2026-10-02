@@ -5,7 +5,7 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
-  databaseURL: "https://demo-project-default-rtdb.firebaseio.com",
+  databaseURL: "https://quanlycb-default-rtdb.firebaseio.com",
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_STORAGE_BUCKET",
   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",

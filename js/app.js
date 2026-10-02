@@ -1,21 +1,23 @@
 import { database } from './firebase-config.js';
 import { ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { initAuth, getCurrentUser } from './auth.js';
+import { checkAndSeedData } from './seed.js';
 
 // --- DATA MAPPINGS ---
 export const deptCodeMap = {
     'BGD': 'Ban Giám đốc',
-    'PDT': 'Phòng Đào tạo - KH & QLSV',
-    'PHC': 'Phòng Hành chính – Tài vụ'
+    'DT_KH_QLSV': 'Phòng Đào tạo - KH & QLSV',
+    'HCTV': 'Phòng Hành chính – Tài vụ'
 };
 
 export const deptColorMap = {
     'BGD': 'bg-purple-100 text-purple-800 border-purple-200',
-    'PDT': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    'PHC': 'bg-blue-100 text-blue-800 border-blue-200'
+    'DT_KH_QLSV': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    'HCTV': 'bg-blue-100 text-blue-800 border-blue-200'
 };
 
 export const statusMap = {
+    'CHO_DUYET': { text: 'Chờ duyệt', class: 'bg-orange-100 text-orange-800' },
     'CHO_BGD_DUYET': { text: 'Chờ BGD Duyệt', class: 'bg-yellow-100 text-yellow-800' },
     'DANG_THUC_HIEN': { text: 'Đang thực hiện', class: 'bg-blue-100 text-blue-800' },
     'YEU_CAU_SUA': { text: 'Yêu cầu sửa', class: 'bg-red-100 text-red-800' },
@@ -27,7 +29,8 @@ let allTasks = {};
 let currentUser = null;
 
 // --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAndSeedData();
     initAuth((user) => {
         currentUser = user;
         if (user) {
@@ -153,11 +156,12 @@ btnSubmitWeekly.addEventListener('click', async () => {
             name,
             week,
             deptCode: currentUser.deptCode,
+            host: currentUser.deptCode === 'BGD' ? 'Ban Giám đốc' : deptCodeMap[currentUser.deptCode],
             mainAssignee: main,
             subAssignees: sub,
             priority,
             deadline,
-            status: 'CHO_BGD_DUYET', // Default for new tasks
+            status: 'CHO_DUYET', // Default for new tasks
             progress: 0,
             evidenceUrl: '',
             feedback: '',
@@ -221,8 +225,8 @@ function renderTable() {
     for (const [taskId, task] of Object.entries(allTasks)) {
 
         // RBAC View Logic
-        // BGD sees all. Truong Phong / Nhan Vien see their dept only, unless specifically filtering (handled below)
-        if (currentUser.role !== 'BGD' && task.deptCode !== currentUser.deptCode) {
+        // SUPER_ADMIN and BGD see all. Truong Phong / Pho Phong / Nhan Vien see their dept only, unless specifically filtering (handled below)
+        if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD' && task.deptCode !== currentUser.deptCode) {
             continue;
         }
 
@@ -319,7 +323,7 @@ window.openEditModal = function(taskId) {
     feedbackArea.classList.add('hidden');
 
     // RBAC for editing
-    if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG') {
+    if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
         if (task.status === 'DANG_THUC_HIEN' || task.status === 'YEU_CAU_SUA') {
             document.getElementById('editProgress').disabled = false;
             document.getElementById('editEvidence').disabled = false;
@@ -331,8 +335,8 @@ window.openEditModal = function(taskId) {
         }
     }
 
-    if (currentUser.role === 'BGD' || currentUser.role === 'TRUONG_PHONG') {
-        if (task.status === 'CHO_BGD_DUYET') {
+    if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+        if (task.status === 'CHO_DUYET' || task.status === 'CHO_BGD_DUYET') {
             btnApprove.classList.remove('hidden');
             btnReject.classList.remove('hidden');
             feedbackArea.classList.remove('hidden');

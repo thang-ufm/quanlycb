@@ -1,8 +1,9 @@
-// Mock Authentication System
-// In a real app, this would use Firebase Auth. For this requirement, it's simulated to test RBAC quickly.
+// Authentication System
+import { database } from './firebase-config.js';
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // State variables
-let currentUser = null; // { role: 'BGD' | 'TRUONG_PHONG' | 'NHAN_VIEN', deptCode: 'BGD' | 'PDT' | 'PHC' }
+let currentUser = null; // { fullName, email, role, deptCode }
 
 const loginScreen = document.getElementById('loginScreen');
 const mainApp = document.getElementById('mainApp');
@@ -22,20 +23,63 @@ export function initAuth(onAuthStateChangedCallback) {
     }
 
     // Handle Login
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const role = document.getElementById('loginRole').value;
-        const dept = document.getElementById('loginDept').value;
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        const errorMsg = document.getElementById('loginError');
 
-        currentUser = { role, deptCode: dept };
+        if (errorMsg) errorMsg.classList.add('hidden');
 
-        // Overrides logic: if role is BGD, dept must be BGD.
-        if(role === 'BGD') currentUser.deptCode = 'BGD';
+        try {
+            const usersRef = ref(database, 'users');
+            const snapshot = await get(usersRef);
 
-        localStorage.setItem('taskAppUser', JSON.stringify(currentUser));
+            if (snapshot.exists()) {
+                const users = snapshot.val();
+                let foundUser = null;
 
-        showMainApp();
-        onAuthStateChangedCallback(currentUser);
+                // Find user by email and check password
+                for (const key in users) {
+                    if (users[key].email === email && users[key].password === password) {
+                        foundUser = users[key];
+                        // Don't save password in local storage
+                        const { password: _, ...safeUser } = foundUser;
+                        foundUser = safeUser;
+                        break;
+                    }
+                }
+
+                if (foundUser) {
+                    currentUser = foundUser;
+                    localStorage.setItem('taskAppUser', JSON.stringify(currentUser));
+                    showMainApp();
+                    onAuthStateChangedCallback(currentUser);
+                } else {
+                    if (errorMsg) {
+                        errorMsg.textContent = "Email hoặc mật khẩu không đúng!";
+                        errorMsg.classList.remove('hidden');
+                    } else {
+                        alert("Email hoặc mật khẩu không đúng!");
+                    }
+                }
+            } else {
+                 if (errorMsg) {
+                    errorMsg.textContent = "Hệ thống chưa có dữ liệu người dùng!";
+                    errorMsg.classList.remove('hidden');
+                 } else {
+                    alert("Hệ thống chưa có dữ liệu người dùng!");
+                 }
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            if (errorMsg) {
+                errorMsg.textContent = "Đã xảy ra lỗi kết nối!";
+                errorMsg.classList.remove('hidden');
+            } else {
+                alert("Đã xảy ra lỗi kết nối!");
+            }
+        }
     });
 
     // Handle Logout
@@ -58,11 +102,13 @@ function showMainApp() {
 
     // Update Header info
     let roleText = "";
-    if(currentUser.role === 'BGD') roleText = "Ban Giám đốc";
-    else if(currentUser.role === 'TRUONG_PHONG') roleText = "Trưởng/Phó Phòng";
+    if (currentUser.role === 'SUPER_ADMIN') roleText = "Super Admin";
+    else if (currentUser.role === 'BGD') roleText = "Ban Giám đốc";
+    else if (currentUser.role === 'TRUONG_PHONG') roleText = "Trưởng Phòng";
+    else if (currentUser.role === 'PHO_PHONG') roleText = "Phó Phòng";
     else roleText = "Nhân viên";
 
-    userInfo.innerHTML = `Xin chào, <b>${roleText} (${currentUser.deptCode})</b>`;
+    userInfo.innerHTML = `Xin chào, <b>${currentUser.fullName}</b> (${roleText} - ${currentUser.deptCode})`;
 }
 
 export function getCurrentUser() {
