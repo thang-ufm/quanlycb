@@ -1,0 +1,23 @@
+/* Custom overrides or small styles not handled easily by basic Tailwind classes */
+
+.hidden {
+    display: none !important;
+}
+
+/* Make tables scrollable nicely */
+.overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+}
+.overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: #CBD5E1;
+    border-radius: 4px;
+}
+
+/* Modals z-index and fixes */
+.modal-overlay {
+    backdrop-filter: blur(2px);
+}
