@@ -17,6 +17,7 @@ export const deptColorMap = {
 };
 
 export const statusMap = {
+    'MOI_GIAO': { text: 'Mới giao', class: 'bg-orange-500 text-white' },
     'CHO_DUYET': { text: 'Chờ duyệt', class: 'bg-orange-100 text-orange-800' },
     'CHO_BGD_DUYET': { text: 'Chờ BGD Duyệt', class: 'bg-yellow-100 text-yellow-800' },
     'DANG_THUC_HIEN': { text: 'Đang thực hiện', class: 'bg-blue-100 text-blue-800' },
@@ -241,16 +242,25 @@ function openAssignTaskModal() {
 function populateAssignTarget() {
     const assignType = document.getElementById('assignType').value;
     const assignTarget = document.getElementById('assignTarget');
+    const assignSubTarget = document.getElementById('assignSubTarget');
+    const assignSubTargetContainer = document.getElementById('assignSubTargetContainer');
+
     assignTarget.innerHTML = '';
+    if (assignSubTarget) assignSubTarget.innerHTML = '';
 
     if (assignType === 'PHONG') {
+        if (assignSubTargetContainer) assignSubTargetContainer.classList.add('hidden');
         for (const code in deptCodeMap) {
             assignTarget.innerHTML += `<option value="${code}">${deptCodeMap[code]}</option>`;
         }
     } else {
+        if (assignSubTargetContainer) assignSubTargetContainer.classList.remove('hidden');
         for (const key in allUsers) {
             const u = allUsers[key];
             assignTarget.innerHTML += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+            if (assignSubTarget) {
+                assignSubTarget.innerHTML += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+            }
         }
     }
 }
@@ -264,6 +274,17 @@ document.getElementById('btnSubmitAssign')?.addEventListener('click', async () =
     const priority = document.getElementById('assignPriority').value;
     const deadline = document.getElementById('assignDeadline').value;
 
+    let subAssigneesStr = '';
+    if (type === 'CA_NHAN') {
+        const subSelect = document.getElementById('assignSubTarget');
+        if (subSelect) {
+            const selectedSubs = Array.from(subSelect.selectedOptions).map(opt => opt.value);
+            // Bỏ qua nếu chọn trùng với người phụ trách chính
+            const filteredSubs = selectedSubs.filter(sub => sub !== target);
+            subAssigneesStr = filteredSubs.join(', ');
+        }
+    }
+
     if (!name || !deadline) {
         alert('Vui lòng nhập đầy đủ thông tin Tên công việc và Hạn chót!');
         return;
@@ -274,11 +295,13 @@ document.getElementById('btnSubmitAssign')?.addEventListener('click', async () =
         week: 'Giao trực tiếp', // Default placeholder if week is strictly needed
         deptCode: type === 'PHONG' ? target : 'ALL',
         host: 'Ban Giám đốc',
-        mainAssignee: type === 'CA_NHAN' ? target : `Toàn ${deptCodeMap[target] || target}`,
-        subAssignees: '',
+        primaryAssignee: type === 'CA_NHAN' ? target : `Toàn ${deptCodeMap[target] || target}`,
+        secondaryAssignees: subAssigneesStr,
+        mainAssignee: type === 'CA_NHAN' ? target : `Toàn ${deptCodeMap[target] || target}`, // Giữ lại mainAssignee cho tương thích ngược
+        subAssignees: subAssigneesStr, // Giữ lại subAssignees cho tương thích ngược
         priority,
         deadline,
-        status: 'DANG_THUC_HIEN',
+        status: 'MOI_GIAO',
         progress: 0,
         evidenceUrl: '',
         feedback: '',
@@ -355,21 +378,35 @@ function renderTable() {
     const sFilter = filterStatus.value;
 
     let index = 1;
+    let myTasksCount = 0;
+
     for (const [taskId, task] of Object.entries(allTasks)) {
 
-        // RBAC View Logic
-        // SUPER_ADMIN and BGD see all. Truong Phong / Pho Phong / Nhan Vien see their dept only, unless specifically filtering (handled below)
-        if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD' && task.deptCode !== currentUser.deptCode) {
-            continue;
+        // Check if the task belongs to the current user
+        const primary = task.primaryAssignee || task.mainAssignee || '';
+        const secondary = task.secondaryAssignees || task.subAssignees || '';
+        const isMyTask = primary === currentUser.fullName || primary === currentUser.email ||
+                         secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
+                         (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
+
+        if (isMyTask && (task.status === 'MOI_GIAO' || task.status === 'DANG_THUC_HIEN')) {
+            myTasksCount++;
         }
 
-        // Apply Dept Filter
-        if (dFilter === 'MY_TASKS') {
-            // Very simple check for demo purposes: does their name/dept match somehow?
-            // In a real app, we'd check if user.name == task.mainAssignee. Here we just check dept.
-            if (task.deptCode !== currentUser.deptCode) continue;
-        } else if (dFilter !== 'ALL' && task.deptCode !== dFilter) {
-            continue;
+        // RBAC View Logic
+        // SUPER_ADMIN and BGD see all. Truong Phong / Pho Phong / Nhan Vien see their dept only, unless it's their task and filtering MY_TASKS
+        if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
+            if (dFilter === 'MY_TASKS') {
+                if (!isMyTask) continue;
+            } else {
+                // Hiển thị ngay cả khi vào Dashboard nếu là việc của tôi và không filter MY_TASKS (vd: filter ALL)
+                if (!isMyTask && task.deptCode !== currentUser.deptCode) continue;
+                if (dFilter !== 'ALL' && task.deptCode !== dFilter && !isMyTask) continue;
+            }
+        } else {
+            // Admin or BGD view
+            if (dFilter === 'MY_TASKS' && !isMyTask) continue;
+            else if (dFilter !== 'ALL' && dFilter !== 'MY_TASKS' && task.deptCode !== dFilter) continue;
         }
 
         // Apply Status Filter
@@ -389,17 +426,30 @@ function renderTable() {
             ? `<a href="${task.evidenceUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="Xem minh chứng"><i class="fab fa-google-drive"></i></a>`
             : '';
 
+        let nameHtml = escapeHtml(task.name);
+        if (task.status === 'MOI_GIAO') {
+            nameHtml += ` <span class="bg-blue-600 text-white text-[10px] px-1 rounded ml-1">📌 BGD Giao</span>`;
+        }
+
+        let actionHtml = `<button onclick="openEditModal('${taskId}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
+        if (task.status === 'MOI_GIAO' && isMyTask) {
+            actionHtml = `<button onclick="acceptTask('${taskId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-xs">Đã nhận việc</button> ` + actionHtml;
+        }
+
+        const dispPrimary = task.primaryAssignee || task.mainAssignee || '';
+        const dispSecondary = task.secondaryAssignees || task.subAssignees || '';
+
         tr.innerHTML = `
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${index++}</td>
-            <td class="px-4 py-4 text-sm font-medium text-gray-900">${escapeHtml(task.name)}</td>
+            <td class="px-4 py-4 text-sm font-medium text-gray-900">${nameHtml}</td>
             <td class="px-4 py-4 text-sm">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${badgeColor}">
                     ${deptName}
                 </span>
             </td>
             <td class="px-4 py-4 text-sm text-gray-700">
-                <div class="font-bold">${escapeHtml(task.mainAssignee)}</div>
-                <div class="text-xs text-gray-500">${escapeHtml(task.subAssignees || '')}</div>
+                <div class="font-bold">${escapeHtml(dispPrimary)}</div>
+                <div class="text-xs text-gray-500">${escapeHtml(dispSecondary)}</div>
             </td>
             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${task.priority}</td>
             <td class="px-4 py-4 whitespace-nowrap text-sm">
@@ -418,10 +468,16 @@ function renderTable() {
             </td>
             <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${task.deadline}</td>
             <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium">
-                <button onclick="openEditModal('${taskId}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>
+                ${actionHtml}
             </td>
         `;
         tbody.appendChild(tr);
+    }
+
+    // Update filter text for MY_TASKS badge
+    const myTasksOption = filterDept.querySelector('option[value="MY_TASKS"]');
+    if (myTasksOption) {
+        myTasksOption.textContent = `📌 Công việc của tôi (${myTasksCount})`;
     }
 }
 
@@ -554,15 +610,17 @@ function setupExport() {
         let index = 1;
 
         for (const [taskId, task] of Object.entries(allTasks)) {
+            // Reusing isMyTask logic for Export Filter to be consistent
+            const primary = task.primaryAssignee || task.mainAssignee || '';
+            const secondary = task.secondaryAssignees || task.subAssignees || '';
+            const isMyTask = primary === currentUser.fullName || primary === currentUser.email ||
+                             secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
+                             (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
+
             // RBAC Filter
             if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
-                if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
-                    if (task.deptCode !== currentUser.deptCode) continue;
-                } else if (currentUser.role === 'NHAN_VIEN') {
-                    if (task.mainAssignee !== currentUser.fullName && (!task.subAssignees || !task.subAssignees.includes(currentUser.fullName))) {
-                        continue;
-                    }
-                }
+                if (!isMyTask && task.deptCode !== currentUser.deptCode) continue;
+                if (currentUser.role === 'NHAN_VIEN' && !isMyTask) continue;
             }
 
             // Time Filter
@@ -648,3 +706,15 @@ function escapeHtml(unsafe) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
+
+// --- TASK ACTIONS ---
+window.acceptTask = async function(taskId) {
+    if (confirm('Xác nhận đã nhận công việc này?')) {
+        try {
+            await update(ref(database, 'tasks/' + taskId), { status: 'DANG_THUC_HIEN' });
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi cập nhật trạng thái');
+        }
+    }
+};
