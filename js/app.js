@@ -404,7 +404,75 @@ window.openWeeklyTaskModal = openWeeklyTaskModal;
 
 // --- FILTERING & RENDERING TABLE ---
 let currentTab = 'MY_TASKS';
+let globalMyTasksCount = 0;
 const filterStatus = document.getElementById('filterStatus');
+
+function updateStatisticsCards() {
+    let total = 0, completed = 0, inProgress = 0, overdue = 0;
+
+    for (const [taskId, task] of Object.entries(allTasks)) {
+        const primary = task.primaryAssignee || task.mainAssignee || '';
+        const secondary = task.secondaryAssignees || task.subAssignees || '';
+        const isMyTask = primary === currentUser.fullName || primary === currentUser.email ||
+                         secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
+                         (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
+
+        let hasAccess = false;
+        if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
+            if (isMyTask || task.deptCode === currentUser.deptCode) hasAccess = true;
+        } else {
+            hasAccess = true;
+        }
+
+        if (hasAccess) {
+            total++;
+            if (task.status === 'HOAN_THANH') completed++;
+            if (task.status === 'DANG_THUC_HIEN') inProgress++;
+            if (task.status !== 'HOAN_THANH' && task.deadline) {
+                if (new Date() > new Date(task.deadline)) overdue++;
+            }
+        }
+    }
+
+    document.getElementById('statTotal').innerText = total;
+    document.getElementById('statCompleted').innerText = completed;
+    document.getElementById('statInProgress').innerText = inProgress;
+    document.getElementById('statOverdue').innerText = overdue;
+}
+
+function showStatistics() {
+    document.getElementById('mainTableArea').classList.add('hidden');
+    document.getElementById('filterContainer').classList.add('hidden');
+    document.getElementById('statisticsArea').classList.remove('hidden');
+    updateStatisticsCards();
+
+    // Update Export target options based on Role
+    const exportTarget = document.getElementById('exportTarget');
+    if (exportTarget) {
+        if (currentUser.role === 'NHAN_VIEN') {
+            exportTarget.innerHTML = `<option value="MY_TASKS">Công việc của tôi</option>`;
+        } else if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+            exportTarget.innerHTML = `
+                <option value="ALL">Toàn Phân hiệu</option>
+                <option value="MY_TASKS">Công việc của tôi</option>
+                <option value="${currentUser.deptCode}">${deptCodeMap[currentUser.deptCode] || currentUser.deptCode}</option>
+            `;
+        } else { // BGD, ADMIN
+            exportTarget.innerHTML = `
+                <option value="ALL">Toàn Phân hiệu</option>
+                <option value="MY_TASKS">Công việc của tôi</option>
+                <option value="HCTV">Phòng Hành chính - Tài vụ</option>
+                <option value="DT_KH_QLSV">Phòng Đào tạo - KH & QLSV</option>
+            `;
+        }
+    }
+}
+
+function showTasks() {
+    document.getElementById('statisticsArea').classList.add('hidden');
+    document.getElementById('mainTableArea').classList.remove('hidden');
+    document.getElementById('filterContainer').classList.remove('hidden');
+}
 
 function setupFilters() {
     filterStatus.addEventListener('change', renderTable);
@@ -425,6 +493,8 @@ function renderTabs(myTasksCount) {
         tabsData.push({ id: 'ALL', label: 'Toàn Phân hiệu' });
     }
 
+    tabsData.push({ id: 'STATS', label: '📊 Thống kê' });
+
     tabsData.forEach(tab => {
         const btn = document.createElement('button');
         const isActive = currentTab === tab.id;
@@ -440,7 +510,13 @@ function renderTabs(myTasksCount) {
 
         btn.onclick = () => {
             currentTab = tab.id;
-            renderTable();
+            if (tab.id === 'STATS') {
+                showStatistics();
+                renderTabs(globalMyTasksCount);
+            } else {
+                showTasks();
+                renderTable();
+            }
         };
 
         tabsContainer.appendChild(btn);
@@ -459,7 +535,7 @@ function renderTable() {
     const dFilter = currentTab;
     const sFilter = filterStatus.value;
 
-    let index = 1;
+    let index = 0;
     let myTasksCount = 0;
 
     for (const [taskId, task] of Object.entries(allTasks)) {
@@ -496,8 +572,10 @@ function renderTable() {
             continue;
         }
 
+        index++;
+
         const tr = document.createElement('tr');
-        tr.className = index % 2 === 0 ? 'bg-slate-50 hover:bg-slate-100' : 'bg-white hover:bg-slate-50';
+        tr.className = index % 2 !== 0 ? 'bg-white' : 'bg-slate-100';
 
         const badgeColor = deptColorMap[task.deptCode] || 'bg-gray-100 text-gray-800';
         const deptName = deptCodeMap[task.deptCode] || task.deptCode;
@@ -522,7 +600,7 @@ function renderTable() {
         const dispSecondary = task.secondaryAssignees || task.subAssignees || '';
 
         tr.innerHTML = `
-            <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${index++}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${index}</td>
             <td class="px-4 py-4 text-sm font-medium text-gray-900">${nameHtml}</td>
             <td class="px-4 py-4 text-sm">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${badgeColor}">
@@ -556,6 +634,7 @@ function renderTable() {
         tbody.appendChild(tr);
     }
 
+    globalMyTasksCount = myTasksCount;
     // Update tabs with badge count
     renderTabs(myTasksCount);
 }
@@ -664,10 +743,6 @@ document.getElementById('btnRejectTask').addEventListener('click', async () => {
 
 // --- EXPORT TO EXCEL ---
 function setupExport() {
-    document.getElementById('btnExportExcel').addEventListener('click', () => {
-        document.getElementById('modalExportExcel').classList.remove('hidden');
-    });
-
     document.getElementById('exportTimeRange')?.addEventListener('change', function() {
         const customRange = document.getElementById('exportCustomRange');
         if (this.value === 'CUSTOM') {
@@ -677,10 +752,11 @@ function setupExport() {
         }
     });
 
-    document.getElementById('btnConfirmExport')?.addEventListener('click', () => {
+    document.getElementById('btnExportExcelNew')?.addEventListener('click', () => {
         const timeRange = document.getElementById('exportTimeRange').value;
         const startDate = document.getElementById('exportStartDate').value;
         const endDate = document.getElementById('exportEndDate').value;
+        const exportTarget = document.getElementById('exportTarget') ? document.getElementById('exportTarget').value : 'ALL';
 
         // Custom time range validation
         let startObj = null, endObj = null;
@@ -710,6 +786,10 @@ function setupExport() {
                 if (!isMyTask && task.deptCode !== currentUser.deptCode) continue;
                 if (currentUser.role === 'NHAN_VIEN' && !isMyTask) continue;
             }
+
+            // Export Target Filter
+            if (exportTarget === 'MY_TASKS' && !isMyTask) continue;
+            if (exportTarget !== 'ALL' && exportTarget !== 'MY_TASKS' && task.deptCode !== exportTarget && !isMyTask) continue;
 
             // Time Filter
             let taskDateStr = task.createdAt || task.deadline;
@@ -778,8 +858,6 @@ function setupExport() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Tasks");
         XLSX.writeFile(wb, "DanhSachCongViec.xlsx");
-
-        document.getElementById('modalExportExcel').classList.add('hidden');
     });
 }
 
