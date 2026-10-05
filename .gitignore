@@ -3,3 +3,4 @@ __pycache__/
 sql_app.db
 venv/
 .env
+node_modules/
