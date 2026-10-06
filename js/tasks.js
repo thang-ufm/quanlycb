@@ -119,6 +119,9 @@ export function renderTable() {
     const filterStatus = document.getElementById('filterStatus');
     const sFilter = filterStatus ? filterStatus.value : 'ALL';
 
+    const searchInput = document.getElementById('taskSearchInput');
+    const searchKeyword = searchInput ? searchInput.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
+
     let myTasksCount = 0;
 
     const filteredTasks = [];
@@ -150,6 +153,14 @@ export function renderTable() {
         // Apply Status Filter
         if (sFilter !== 'ALL' && task.status !== sFilter) {
             continue;
+        }
+
+        // Apply Search Filter
+        if (searchKeyword) {
+            const searchableText = `${task.name || ''} ${primary} ${secondary} ${task.feedback || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            if (!searchableText.includes(searchKeyword)) {
+                continue;
+            }
         }
 
         filteredTasks.push({ id: taskId, ...task, isMyTask });
