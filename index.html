@@ -21,49 +21,170 @@
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gray-200 hidden">
-        <div class="bg-white p-8 rounded-lg shadow-md w-96">
-            <div class="text-center mb-6">
-                <h1 class="text-xl font-bold text-blue-800 mb-2 uppercase">Phân hiệu trường Đại học<br>Tài chính – Marketing<br>tại tỉnh Quảng Ngãi</h1>
-                <p class="text-gray-600 font-semibold mt-2 border-t pt-2">HỆ THỐNG QUẢN LÝ CÔNG VIỆC</p>
-            </div>
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-5xl flex flex-col md:flex-row gap-8">
 
-            <form id="loginForm" class="space-y-4">
-                <div id="loginError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
-                    <span class="block sm:inline"></span>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="loginEmail" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập email...">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <input type="password" id="loginPassword" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập mật khẩu...">
-                </div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Đăng nhập
-                </button>
-            </form>
-
-            <div class="mt-6 border-t pt-4">
-                <p class="text-sm font-bold text-gray-700 mb-3 text-center">DANH SÁCH ĐĂNG NHẬP NHANH</p>
-                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+            <!-- Cột trái: Bảng đăng nhập nhanh -->
+            <div class="md:w-2/3">
+                <p class="text-sm font-bold text-gray-700 mb-3 text-center">DANH SÁCH ĐĂNG NHẬP NHANH (CHỌN ĐỂ ĐIỀN TỰ ĐỘNG)</p>
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg max-h-[80vh] overflow-y-auto">
                     <table class="min-w-full divide-y divide-gray-300" id="fastLoginTable">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-gray-50 sticky top-0">
                             <tr>
-                                <th scope="col" class="py-2 pl-2 pr-2 text-left text-xs font-semibold text-gray-900 w-10">STT</th>
-                                <th scope="col" class="py-2 pl-2 pr-2 text-left text-xs font-semibold text-gray-900">Họ và tên</th>
-                                <th scope="col" class="py-2 pl-2 pr-2 text-left text-xs font-semibold text-gray-900">Chức vụ / Phòng ban</th>
-                                <th scope="col" class="py-2 pl-2 pr-2 text-center text-xs font-semibold text-gray-900 w-24">Thao tác</th>
+                                <th scope="col" class="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 w-12 text-center">STT</th>
+                                <th scope="col" class="py-2 pl-3 pr-3 text-left text-xs font-semibold text-gray-900">Họ và tên</th>
+                                <th scope="col" class="py-2 pl-3 pr-3 text-left text-xs font-semibold text-gray-900">Chức vụ</th>
                             </tr>
                         </thead>
                         <tbody id="fastLoginTableBody" class="divide-y divide-gray-200 bg-white">
                             <tr>
-                                <td colspan="4" class="py-4 text-center text-sm text-gray-500">Đang tải danh sách...</td>
+                                <td colspan="3" class="bg-gray-300 font-bold text-xs py-2 px-4 text-gray-800 uppercase">BAN GIÁM ĐỐC</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('yenlinhbt@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">1</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Bùi Thị Yến Linh</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Ban Giám đốc</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('lexuanlam@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">2</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Lê Xuân Lãm</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Ban Giám đốc</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="bg-gray-300 font-bold text-xs py-2 px-4 text-gray-800 uppercase">PHÒNG HÀNH CHÍNH - TÀI VỤ</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tranthibichlien@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">3</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Trần Thị Bích Liên</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Trưởng phòng</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('nguyenthiphuongthao@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">4</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Nguyễn Thị Phương Thảo</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Phó Trưởng phòng</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tranthang@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">5</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Bùi Trần Quyết Thắng</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('huynhthianhtung@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">6</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Huỳnh Thị Anh Tùng</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('nguyenthikimdung@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">7</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Nguyễn Thị Kim Dung</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('phamngocthang@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">8</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Phạm Ngọc Thắng</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tranthitam@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">9</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Trần Thị Tâm</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('dinhthanhha@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">10</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Đinh Thanh Hà</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="bg-gray-300 font-bold text-xs py-2 px-4 text-gray-800 uppercase">PHÒNG ĐÀO TẠO - KHOA HỌC & QUẢN LÝ SINH VIÊN</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('phamhoainam@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">11</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Phạm Hoài Nam</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Trưởng phòng</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('huynhngocnghiem@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">12</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Huỳnh Ngọc Nghiêm</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Phó Trưởng phòng</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tranquanghai@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">13</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Trần Quang Hải</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Phó Trưởng phòng</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('diepquynhtram@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">14</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Diệp Quỳnh Trâm</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('huynhthithanhri@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">15</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Huỳnh Thị Thanh Ri</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tuyetdung.le@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">16</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Lê Thị Tuyết Dung</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('nguyenquynhduyen@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">17</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Nguyễn Thị Quỳnh Duyên</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('nguyenthithuthuy@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">18</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Nguyễn Thị Thu Thủy</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('phamthuhao@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">19</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Phạm Thị Thu Hảo</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('tathiquynhngoc@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">20</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Tạ Thị Quỳnh Ngọc</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-white hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('vovanthao@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">21</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Võ Văn Thảo</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
+                            </tr>
+                            <tr class="bg-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" onclick="selectQuickLogin('dangduythanhhuong@ufm.edu.vn')">
+                                <td class="py-2 pl-4 pr-3 text-sm text-gray-500 w-12 text-center">22</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-900 font-medium">Đặng Duy Thanh Hương</td>
+                                <td class="py-2 pl-3 pr-3 text-sm text-gray-500">Nhân viên</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- Cột phải: Form Đăng nhập -->
+            <div class="md:w-1/3 flex flex-col justify-center">
+                <div class="text-center mb-6">
+                    <h1 class="text-xl font-bold text-blue-800 mb-2 uppercase">Phân hiệu trường Đại học<br>Tài chính – Marketing<br>tại tỉnh Quảng Ngãi</h1>
+                    <p class="text-gray-600 font-semibold mt-2 border-t pt-2">HỆ THỐNG QUẢN LÝ CÔNG VIỆC</p>
+                </div>
+
+                <form id="loginForm" class="space-y-4">
+                    <div id="loginError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
+                        <span class="block sm:inline"></span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="loginEmail" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập email...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                        <input type="password" id="loginPassword" required class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border" placeholder="Nhập mật khẩu...">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Đăng nhập
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 
