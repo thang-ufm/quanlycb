@@ -25,7 +25,7 @@ export let currentTab = 'MY_TASKS';
 export let globalMyTasksCount = 0;
 
 let currentPage = 1;
-const itemsPerPage = 15;
+const pageSize = 15;
 
 export function setCurrentTab(tab) {
     currentTab = tab;
@@ -168,20 +168,20 @@ export function renderTable() {
 
     // Pagination
     const totalItems = filteredTasks.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize; // slice automatically limits to array length
 
-    const pageTasks = filteredTasks.slice(startIndex, endIndex);
+    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
 
-    if (pageTasks.length === 0) {
+    if (paginatedTasks.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-gray-500">Chưa có công việc nào.</td></tr>';
     } else {
-        pageTasks.forEach((task, pIndex) => {
+        paginatedTasks.forEach((task, pIndex) => {
             const index = startIndex + pIndex + 1;
             const tr = document.createElement('tr');
 
@@ -271,11 +271,11 @@ export function renderTable() {
         });
     }
 
-    renderPagination(totalPages, totalItems, startIndex, endIndex);
+    renderPagination(totalPages, totalItems, startIndex, Math.min(endIndex, totalItems));
     renderTabs();
 }
 
-function renderPagination(totalPages, totalItems, startIndex, endIndex) {
+function renderPagination(totalPages, totalItems, startIndex, actualEndIndex) {
     let paginationContainer = document.getElementById('paginationContainer');
 
     // Create pagination container if it doesn't exist
@@ -294,9 +294,9 @@ function renderPagination(totalPages, totalItems, startIndex, endIndex) {
 
     let buttonsHtml = '';
     for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === currentPage ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50';
+        const activeClass = i === currentPage ? 'z-10 bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50';
         buttonsHtml += `
-            <button onclick="window.setPageAndRender(${i})" aria-current="page" class="${activeClass} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+            <button onclick="window.changePage(${i})" aria-current="page" class="${activeClass} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
                 ${i}
             </button>
         `;
@@ -306,19 +306,17 @@ function renderPagination(totalPages, totalItems, startIndex, endIndex) {
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
             <div>
                 <p class="text-sm text-gray-700">
-                    Hiển thị <span class="font-medium">${startIndex + 1}</span> - <span class="font-medium">${endIndex}</span> trên tổng số <span class="font-medium">${totalItems}</span> công việc
+                    Hiển thị <span class="font-medium">${startIndex + 1}</span> - <span class="font-medium">${actualEndIndex}</span> trên tổng số <span class="font-medium">${totalItems}</span> công việc
                 </p>
             </div>
             <div>
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <button onclick="window.setPageAndRender(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Previous</span>
-                        <i class="fas fa-chevron-left"></i>
+                    <button onclick="window.changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Trang trước
                     </button>
                     ${buttonsHtml}
-                    <button onclick="window.setPageAndRender(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Next</span>
-                        <i class="fas fa-chevron-right"></i>
+                    <button onclick="window.changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Trang sau
                     </button>
                 </nav>
             </div>
@@ -327,7 +325,8 @@ function renderPagination(totalPages, totalItems, startIndex, endIndex) {
 }
 
 // Expose pagination set function globally to be called from html
-window.setPageAndRender = function(page) {
-    setPage(page);
+window.changePage = function(pageNumber) {
+    currentPage = pageNumber;
     renderTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };

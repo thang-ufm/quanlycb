@@ -13,7 +13,7 @@ window.openAssignTaskModal = openAssignTaskModal;
 window.openEditModal = openEditModal;
 window.openChangePasswordModal = openChangePasswordModal;
 window.showStatistics = showStatistics;
-window.searchTasks = function() { window.setPageAndRender(1); };
+window.searchTasks = function() { window.changePage(1); };
 
 window.acceptTask = async function(taskId) {
     if (confirm('Xác nhận đã nhận công việc này?')) {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (filterStatus) {
                 filterStatus.addEventListener('change', () => {
                     // Reset to first page when changing status
-                    window.setPageAndRender(1);
+                    window.changePage(1);
                 });
             }
 
