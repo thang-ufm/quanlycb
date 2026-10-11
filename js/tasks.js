@@ -303,7 +303,7 @@ function renderPagination(totalPages, totalItems, startIndex, actualEndIndex) {
     }
 
     paginationContainer.innerHTML = `
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
+        <div class="flex flex-col sm:flex-row sm:flex-1 items-center justify-between w-full gap-4">
             <div>
                 <p class="text-sm text-gray-700">
                     Hiển thị <span class="font-medium">${startIndex + 1}</span> - <span class="font-medium">${actualEndIndex}</span> trên tổng số <span class="font-medium">${totalItems}</span> công việc
