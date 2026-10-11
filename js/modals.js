@@ -12,6 +12,15 @@ import { setCurrentUser } from "./store.js";
 // --- MODAL: WEEKLY TASK ---
 export function openAdvancedSearchModal() {
   document.getElementById("advancedSearchModal").classList.remove("hidden");
+
+  const assigneeSelect = document.getElementById("advSearchAssignee");
+  if (assigneeSelect && assigneeSelect.options.length <= 1) {
+    const allUsers = getAllUsers();
+    for (const key in allUsers) {
+      const u = allUsers[key];
+      assigneeSelect.innerHTML += `<option value="${u.fullName}">${u.fullName} (${u.deptCode})</option>`;
+    }
+  }
 }
 
 export function closeAdvancedSearchModal() {
@@ -22,10 +31,12 @@ export function resetAdvancedSearch() {
   const timeSelect = document.getElementById("advSearchTime");
   const statusSelect = document.getElementById("advSearchStatus");
   const prioritySelect = document.getElementById("advSearchPriority");
+  const assigneeSelect = document.getElementById("advSearchAssignee");
 
   if (timeSelect) timeSelect.value = "Tất cả";
   if (statusSelect) statusSelect.value = "Tất cả";
   if (prioritySelect) prioritySelect.value = "Tất cả";
+  if (assigneeSelect) assigneeSelect.value = "Tất cả";
 
   window.changePage(1);
   // Since renderTable is in tasks.js, and app.js listens, we can import renderTable or rely on window.changePage logic which calls renderTable.

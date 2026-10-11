@@ -143,11 +143,14 @@ export function renderTable() {
   const advSearchTimeEl = document.getElementById("advSearchTime");
   const advSearchStatusEl = document.getElementById("advSearchStatus");
   const advSearchPriorityEl = document.getElementById("advSearchPriority");
+  const advSearchAssigneeEl = document.getElementById("advSearchAssignee");
+
   const advTime = advSearchTimeEl ? advSearchTimeEl.value : "Tất cả";
   const advStatus = advSearchStatusEl ? advSearchStatusEl.value : "Tất cả";
   const advPriority = advSearchPriorityEl
     ? advSearchPriorityEl.value
     : "Tất cả";
+  const advAssignee = advSearchAssigneeEl ? advSearchAssigneeEl.value : "Tất cả";
 
   let myTasksCount = 0;
 
@@ -201,6 +204,14 @@ export function renderTable() {
 
     if (advPriority !== "Tất cả") {
       if (task.priority !== advPriority) continue;
+    }
+
+    if (advAssignee !== "Tất cả") {
+      const matchPrimary = primary === advAssignee;
+      const matchSecondary = secondary.includes(advAssignee);
+      if (!matchPrimary && !matchSecondary) {
+        continue;
+      }
     }
 
     if (advTime !== "Tất cả" && task.deadline) {
