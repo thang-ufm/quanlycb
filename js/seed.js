@@ -170,6 +170,266 @@ const seedUsers = {
 };
 
 const seedTasks = {
+    "task_test_0": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 0",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_0",
+        "name": "Test task 0",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_1": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 1",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_1",
+        "name": "Test task 1",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_2": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 2",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_2",
+        "name": "Test task 2",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_3": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 3",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_3",
+        "name": "Test task 3",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_4": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 4",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_4",
+        "name": "Test task 4",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_5": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 5",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_5",
+        "name": "Test task 5",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_6": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 6",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_6",
+        "name": "Test task 6",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_7": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 7",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_7",
+        "name": "Test task 7",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_8": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 8",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_8",
+        "name": "Test task 8",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_9": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 9",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_9",
+        "name": "Test task 9",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_10": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 10",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_10",
+        "name": "Test task 10",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_11": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 11",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_11",
+        "name": "Test task 11",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_12": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 12",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_12",
+        "name": "Test task 12",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_13": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 13",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_13",
+        "name": "Test task 13",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_14": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 14",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_14",
+        "name": "Test task 14",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_15": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 15",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_15",
+        "name": "Test task 15",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_16": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 16",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_16",
+        "name": "Test task 16",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_17": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 17",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_17",
+        "name": "Test task 17",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_18": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 18",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_18",
+        "name": "Test task 18",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
+    "task_test_19": {
+        "createdAt": "2024-03-01T09:00:00Z",
+        "deadline": "2024-03-31",
+        "deptCode": "DT_KH_QLSV",
+        "description": "Test task 19",
+        "host": "Phòng Đào tạo",
+        "id": "task_test_19",
+        "name": "Test task 19",
+        "primaryAssignee": "Nguyễn Văn B (NV Đào tạo)",
+        "priority": "Bình thường",
+        "status": "MOI_GIAO"
+    },
+
     "task_hctv_1": {
         name: "Lập dự toán ngân sách hoạt động Quý 4/2026",
         deptCode: "HCTV",
