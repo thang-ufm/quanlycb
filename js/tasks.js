@@ -143,11 +143,6 @@ export function renderTable() {
             if (!isMyTask) continue;
         } else if (dFilter !== 'ALL' && dFilter !== 'STATS') {
             if (task.deptCode !== dFilter) continue;
-
-            // If they are regular users, check if they are allowed to see this department
-            if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
-                if (currentUser.deptCode !== dFilter) continue; // Deny access to other departments completely
-            }
         }
 
         // Apply Status Filter
@@ -212,7 +207,19 @@ export function renderTable() {
                 nameHtml += `<span class="text-xs text-red-600 font-semibold block mt-1">💬 Có ý kiến chỉ đạo từ BGD/Lãnh đạo</span>`;
             }
 
-            let actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
+            let canEdit = false;
+            if (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'BGD') {
+                canEdit = true;
+            } else if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+                canEdit = task.isMyTask || task.deptCode === currentUser.deptCode;
+            } else if (currentUser.role === 'NHAN_VIEN') {
+                canEdit = task.isMyTask;
+            }
+
+            let actionHtml = '';
+            if (canEdit) {
+                actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
+            }
             if (task.status === 'MOI_GIAO' && task.isMyTask) {
                 actionHtml = `<button onclick="window.acceptTask('${task.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-xs">Đã nhận việc</button> ` + actionHtml;
             }

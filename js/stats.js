@@ -15,14 +15,7 @@ export function updateStatisticsCards() {
                          secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
                          (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
 
-        let hasAccess = false;
-        if (currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'BGD') {
-            if (isMyTask || task.deptCode === currentUser.deptCode) hasAccess = true;
-        } else {
-            hasAccess = true;
-        }
-
-        if (hasAccess) {
+        if (isMyTask) {
             total++;
             if (task.status === 'HOAN_THANH') completed++;
             if (task.status === 'DANG_THUC_HIEN') inProgress++;
