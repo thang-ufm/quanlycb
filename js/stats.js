@@ -15,7 +15,16 @@ export function updateStatisticsCards() {
                          secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
                          (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
 
-        if (isMyTask) {
+        let shouldCount = false;
+        if (currentUser.role === 'NHAN_VIEN') {
+            shouldCount = isMyTask;
+        } else if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
+            shouldCount = isMyTask || task.deptCode === currentUser.deptCode;
+        } else {
+            shouldCount = true; // BGD, SUPER_ADMIN
+        }
+
+        if (shouldCount) {
             total++;
             if (task.status === 'HOAN_THANH') completed++;
             if (task.status === 'DANG_THUC_HIEN') inProgress++;

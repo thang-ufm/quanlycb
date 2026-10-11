@@ -337,7 +337,8 @@ export function setupModals() {
         try {
             const tasksRef = ref(database, 'tasks');
             for (const task of tasksToPush) {
-                await push(tasksRef, task);
+                const newRef = push(tasksRef);
+                await update(newRef, task);
             }
             alert('Đăng ký công việc thành công!');
             modalWeeklyTask.classList.add('hidden');
@@ -390,7 +391,8 @@ export function setupModals() {
         };
 
         try {
-            await push(ref(database, 'tasks'), task);
+            const newRef = push(ref(database, 'tasks'));
+            await update(newRef, task);
             alert('Giao việc thành công!');
             document.getElementById('modalAssignTask').classList.add('hidden');
         } catch (e) {

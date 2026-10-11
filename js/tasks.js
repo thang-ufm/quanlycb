@@ -216,6 +216,14 @@ export function renderTable() {
                 canEdit = task.isMyTask;
             }
 
+            // Explicitly disable edit if not their task and they are in another department view
+            if (currentUser.role === 'NHAN_VIEN' && !task.isMyTask) {
+                canEdit = false;
+            }
+            if ((currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') && !task.isMyTask && task.deptCode !== currentUser.deptCode) {
+                canEdit = false;
+            }
+
             let actionHtml = '';
             if (canEdit) {
                 actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
@@ -263,11 +271,11 @@ export function renderTable() {
         });
     }
 
-    renderPagination(totalPages);
+    renderPagination(totalPages, totalItems, startIndex, endIndex);
     renderTabs();
 }
 
-function renderPagination(totalPages) {
+function renderPagination(totalPages, totalItems, startIndex, endIndex) {
     let paginationContainer = document.getElementById('paginationContainer');
 
     // Create pagination container if it doesn't exist
@@ -298,7 +306,7 @@ function renderPagination(totalPages) {
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
             <div>
                 <p class="text-sm text-gray-700">
-                    Trang <span class="font-medium">${currentPage}</span> / <span class="font-medium">${totalPages}</span>
+                    Hiển thị <span class="font-medium">${startIndex + 1}</span> - <span class="font-medium">${endIndex}</span> trên tổng số <span class="font-medium">${totalItems}</span> công việc
                 </p>
             </div>
             <div>

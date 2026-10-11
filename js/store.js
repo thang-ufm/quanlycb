@@ -29,8 +29,13 @@ function notifyUserListeners() {
 }
 
 // Data Fetching
+let isStoreInitialized = false;
+
 export function initStore(currentUserObj) {
     state.currentUser = currentUserObj;
+
+    if (isStoreInitialized) return;
+    isStoreInitialized = true;
 
     // Set up a single listener for tasks
     const tasksRef = ref(database, 'tasks');
