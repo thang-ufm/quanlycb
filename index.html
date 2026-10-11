@@ -234,6 +234,9 @@
                                 </select>
                             </div>
                             <input type="text" id="taskSearchInput" placeholder="🔍 Tìm kiếm công việc, người thực hiện, nội dung..." class="w-full md:w-80 px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500">
+                            <button onclick="openAdvancedSearchModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border flex items-center gap-1 text-sm">
+                                ⚙️ Tìm kiếm nâng cao
+                            </button>
                         </div>
                 </div>
             </div>
@@ -596,6 +599,64 @@
                     </button>
                     <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm btn-close-modal">
                         Hủy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Advanced Search -->
+    <div id="advancedSearchModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeAdvancedSearchModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Modal panel -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                        ⚙️ Tìm kiếm nâng cao
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Khoảng thời gian</label>
+                            <select id="advSearchTime" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Tuần này">Tuần này</option>
+                                <option value="Tuần tới">Tuần tới</option>
+                                <option value="Tháng này (10/2026)">Tháng này (10/2026)</option>
+                                <option value="Tháng trước (09/2026)">Tháng trước (09/2026)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái công việc</label>
+                            <select id="advSearchStatus" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Chưa thực hiện">Chưa thực hiện</option>
+                                <option value="Đang thực hiện">Đang thực hiện</option>
+                                <option value="Hoàn thành">Hoàn thành</option>
+                                <option value="Chờ duyệt">Chờ duyệt</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mức độ ưu tiên</label>
+                            <select id="advSearchPriority" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Đột xuất / Khẩn">Đột xuất / Khẩn</option>
+                                <option value="Cao">Cao</option>
+                                <option value="Bình thường">Bình thường</option>
+                                <option value="Thấp">Thấp</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                    <button type="button" onclick="applyAdvancedFilters()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        🔍 Áp dụng lọc
+                    </button>
+                    <button type="button" onclick="resetAdvancedSearch()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        ↺ Đặt lại
                     </button>
                 </div>
             </div>

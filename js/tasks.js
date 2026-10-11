@@ -1,241 +1,382 @@
-import { getAllTasks, getCurrentUser } from './store.js';
+import { getAllTasks, getCurrentUser } from "./store.js";
 
 export const deptCodeMap = {
-    'BGD': 'Ban Giám đốc',
-    'DT_KH_QLSV': 'Phòng Đào tạo - KH & QLSV',
-    'HCTV': 'Phòng Hành chính – Tài vụ'
+  BGD: "Ban Giám đốc",
+  DT_KH_QLSV: "Phòng Đào tạo - KH & QLSV",
+  HCTV: "Phòng Hành chính – Tài vụ",
 };
 
 export const deptColorMap = {
-    'BGD': 'bg-purple-100 text-purple-800 border-purple-200',
-    'DT_KH_QLSV': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    'HCTV': 'bg-blue-100 text-blue-800 border-blue-200'
+  BGD: "bg-purple-100 text-purple-800 border-purple-200",
+  DT_KH_QLSV: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  HCTV: "bg-blue-100 text-blue-800 border-blue-200",
 };
 
 export const statusMap = {
-    'MOI_GIAO': { text: 'Mới giao', class: 'bg-orange-500 text-white' },
-    'CHO_DUYET': { text: 'Chờ duyệt', class: 'bg-orange-100 text-orange-800' },
-    'CHO_BGD_DUYET': { text: 'Chờ BGD Duyệt', class: 'bg-yellow-100 text-yellow-800' },
-    'DANG_THUC_HIEN': { text: 'Đang thực hiện', class: 'bg-blue-100 text-blue-800' },
-    'YEU_CAU_SUA': { text: 'Yêu cầu sửa', class: 'bg-red-100 text-red-800' },
-    'HOAN_THANH': { text: 'Hoàn thành', class: 'bg-green-100 text-green-800' }
+  MOI_GIAO: { text: "Mới giao", class: "bg-orange-500 text-white" },
+  CHO_DUYET: { text: "Chờ duyệt", class: "bg-orange-100 text-orange-800" },
+  CHO_BGD_DUYET: {
+    text: "Chờ BGD Duyệt",
+    class: "bg-yellow-100 text-yellow-800",
+  },
+  DANG_THUC_HIEN: {
+    text: "Đang thực hiện",
+    class: "bg-blue-100 text-blue-800",
+  },
+  YEU_CAU_SUA: { text: "Yêu cầu sửa", class: "bg-red-100 text-red-800" },
+  HOAN_THANH: { text: "Hoàn thành", class: "bg-green-100 text-green-800" },
 };
 
-export let currentTab = 'MY_TASKS';
+export let currentTab = "MY_TASKS";
 export let globalMyTasksCount = 0;
 
 let currentPage = 1;
 const pageSize = 15;
 
 export function setCurrentTab(tab) {
-    currentTab = tab;
-    currentPage = 1; // Reset page when changing tab
+  currentTab = tab;
+  currentPage = 1; // Reset page when changing tab
 }
 
 export function setPage(page) {
-    currentPage = page;
+  currentPage = page;
 }
 
 export function escapeHtml(unsafe) {
-    if(!unsafe) return '';
-    return unsafe
-         .toString()
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+  if (!unsafe) return "";
+  return unsafe
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 export function showTasks() {
-    document.getElementById('statisticsArea').classList.add('hidden');
-    document.getElementById('mainTableArea').classList.remove('hidden');
-    document.getElementById('filterContainer').classList.remove('hidden');
+  document.getElementById("statisticsArea").classList.add("hidden");
+  document.getElementById("mainTableArea").classList.remove("hidden");
+  document.getElementById("filterContainer").classList.remove("hidden");
 }
 
 export function renderTabs() {
-    const tabsContainer = document.getElementById('filterDeptTabs');
-    if (!tabsContainer) return;
-    tabsContainer.innerHTML = '';
+  const tabsContainer = document.getElementById("filterDeptTabs");
+  if (!tabsContainer) return;
+  tabsContainer.innerHTML = "";
 
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
 
-    const tabsData = [
-        { id: 'MY_TASKS', label: `📌 Công việc của tôi`, badge: globalMyTasksCount },
-        { id: 'HCTV', label: 'Phòng Hành chính – Tài vụ' },
-        { id: 'DT_KH_QLSV', label: 'Phòng Đào tạo - KH & QLSV' }
-    ];
+  const tabsData = [
+    {
+      id: "MY_TASKS",
+      label: `📌 Công việc của tôi`,
+      badge: globalMyTasksCount,
+    },
+    { id: "HCTV", label: "Phòng Hành chính – Tài vụ" },
+    { id: "DT_KH_QLSV", label: "Phòng Đào tạo - KH & QLSV" },
+  ];
 
-    if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN') {
-        tabsData.push({ id: 'ALL', label: 'Toàn Phân hiệu' });
+  if (currentUser.role === "BGD" || currentUser.role === "SUPER_ADMIN") {
+    tabsData.push({ id: "ALL", label: "Toàn Phân hiệu" });
+  }
+
+  tabsData.push({ id: "STATS", label: "📊 Thống kê" });
+
+  tabsData.forEach((tab) => {
+    const btn = document.createElement("button");
+    const isActive = currentTab === tab.id;
+
+    let badgeHtml = "";
+    if (tab.badge !== undefined && tab.badge > 0) {
+      badgeHtml = `<span class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${tab.badge}</span>`;
     }
 
-    tabsData.push({ id: 'STATS', label: '📊 Thống kê' });
+    btn.innerHTML = `${tab.label} ${badgeHtml}`;
+    btn.className = `whitespace-nowrap px-4 py-2 font-medium text-sm transition-colors duration-150 outline-none
+            ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent"}`;
 
-    tabsData.forEach(tab => {
-        const btn = document.createElement('button');
-        const isActive = currentTab === tab.id;
+    btn.onclick = () => {
+      if (tab.id === "STATS") {
+        setCurrentTab(tab.id);
+        window.showStatistics(); // Call global function
+        renderTabs();
+      } else {
+        setCurrentTab(tab.id);
+        showTasks();
+        renderTable();
+      }
+    };
 
-        let badgeHtml = '';
-        if (tab.badge !== undefined && tab.badge > 0) {
-            badgeHtml = `<span class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${tab.badge}</span>`;
-        }
-
-        btn.innerHTML = `${tab.label} ${badgeHtml}`;
-        btn.className = `whitespace-nowrap px-4 py-2 font-medium text-sm transition-colors duration-150 outline-none
-            ${isActive ? 'border-b-2 border-blue-600 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent'}`;
-
-        btn.onclick = () => {
-            if (tab.id === 'STATS') {
-                setCurrentTab(tab.id);
-                window.showStatistics(); // Call global function
-                renderTabs();
-            } else {
-                setCurrentTab(tab.id);
-                showTasks();
-                renderTable();
-            }
-        };
-
-        tabsContainer.appendChild(btn);
-    });
+    tabsContainer.appendChild(btn);
+  });
 }
 
 export function renderTable() {
-    const tbody = document.getElementById('tasksTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+  const tbody = document.getElementById("tasksTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
 
-    const allTasks = getAllTasks();
-    const currentUser = getCurrentUser();
+  const allTasks = getAllTasks();
+  const currentUser = getCurrentUser();
 
-    if (!allTasks || Object.keys(allTasks).length === 0 || !currentUser) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-gray-500">Chưa có công việc nào.</td></tr>';
-        return;
+  if (!allTasks || Object.keys(allTasks).length === 0 || !currentUser) {
+    tbody.innerHTML =
+      '<tr><td colspan="9" class="text-center py-4 text-gray-500">Chưa có công việc nào.</td></tr>';
+    return;
+  }
+
+  const dFilter = currentTab;
+  const filterStatus = document.getElementById("filterStatus");
+  const sFilter = filterStatus ? filterStatus.value : "ALL";
+
+  const searchInput = document.getElementById("taskSearchInput");
+  const searchKeyword = searchInput
+    ? searchInput.value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+    : "";
+
+  // Advanced search elements
+  const advSearchTimeEl = document.getElementById("advSearchTime");
+  const advSearchStatusEl = document.getElementById("advSearchStatus");
+  const advSearchPriorityEl = document.getElementById("advSearchPriority");
+  const advTime = advSearchTimeEl ? advSearchTimeEl.value : "Tất cả";
+  const advStatus = advSearchStatusEl ? advSearchStatusEl.value : "Tất cả";
+  const advPriority = advSearchPriorityEl
+    ? advSearchPriorityEl.value
+    : "Tất cả";
+
+  let myTasksCount = 0;
+
+  const filteredTasks = [];
+
+  // Filter tasks based on RBAC and current tab
+  for (const [taskId, task] of Object.entries(allTasks)) {
+    const primary = task.primaryAssignee || task.mainAssignee || "";
+    const secondary = task.secondaryAssignees || task.subAssignees || "";
+    const isMyTask =
+      primary === currentUser.fullName ||
+      primary === currentUser.email ||
+      secondary.includes(currentUser.fullName) ||
+      secondary.includes(currentUser.email) ||
+      (task.host === "Ban Giám đốc" && primary === currentUser.fullName);
+
+    if (
+      isMyTask &&
+      (task.status === "MOI_GIAO" || task.status === "DANG_THUC_HIEN")
+    ) {
+      myTasksCount++;
     }
 
-    const dFilter = currentTab;
-    const filterStatus = document.getElementById('filterStatus');
-    const sFilter = filterStatus ? filterStatus.value : 'ALL';
-
-    const searchInput = document.getElementById('taskSearchInput');
-    const searchKeyword = searchInput ? searchInput.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
-
-    let myTasksCount = 0;
-
-    const filteredTasks = [];
-
-    // Filter tasks based on RBAC and current tab
-    for (const [taskId, task] of Object.entries(allTasks)) {
-        const primary = task.primaryAssignee || task.mainAssignee || '';
-        const secondary = task.secondaryAssignees || task.subAssignees || '';
-        const isMyTask = primary === currentUser.fullName || primary === currentUser.email ||
-                         secondary.includes(currentUser.fullName) || secondary.includes(currentUser.email) ||
-                         (task.host === 'Ban Giám đốc' && primary === currentUser.fullName);
-
-        if (isMyTask && (task.status === 'MOI_GIAO' || task.status === 'DANG_THUC_HIEN')) {
-            myTasksCount++;
-        }
-
-        // Apply Tab Filter correctly to fix cross-view issues
-        if (dFilter === 'MY_TASKS') {
-            if (!isMyTask) continue;
-        } else if (dFilter !== 'ALL' && dFilter !== 'STATS') {
-            if (task.deptCode !== dFilter) continue;
-        }
-
-        // Apply Status Filter
-        if (sFilter !== 'ALL' && task.status !== sFilter) {
-            continue;
-        }
-
-        // Apply Search Filter
-        if (searchKeyword) {
-            const searchableText = `${task.name || ''} ${primary} ${secondary} ${task.feedback || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if (!searchableText.includes(searchKeyword)) {
-                continue;
-            }
-        }
-
-        filteredTasks.push({ id: taskId, ...task, isMyTask });
+    // Apply Tab Filter correctly to fix cross-view issues
+    if (dFilter === "MY_TASKS") {
+      if (!isMyTask) continue;
+    } else if (dFilter !== "ALL" && dFilter !== "STATS") {
+      if (task.deptCode !== dFilter) continue;
     }
 
-    globalMyTasksCount = myTasksCount;
+    // Apply Status Filter
+    if (sFilter !== "ALL" && task.status !== sFilter) {
+      continue;
+    }
 
-    // Sort tasks (optional, maybe newest first)
-    filteredTasks.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    // Apply Advanced Filters
+    if (advStatus !== "Tất cả") {
+      const statusMap = {
+        "Chưa thực hiện": "MOI_GIAO",
+        "Đang thực hiện": "DANG_THUC_HIEN",
+        "Hoàn thành": "HOAN_THANH",
+        "Chờ duyệt": ["CHO_DUYET", "CHO_BGD_DUYET"],
+      };
+      const mappedStatus = statusMap[advStatus];
+      if (Array.isArray(mappedStatus)) {
+        if (!mappedStatus.includes(task.status)) continue;
+      } else if (task.status !== mappedStatus) {
+        continue;
+      }
+    }
 
-    // Pagination
-    const totalItems = filteredTasks.length;
-    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+    if (advPriority !== "Tất cả") {
+      if (task.priority !== advPriority) continue;
+    }
 
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
+    if (advTime !== "Tất cả" && task.deadline) {
+      const deadlineDate = new Date(task.deadline);
+      if (!isNaN(deadlineDate.getTime())) {
+        const now = new Date();
+        let keep = false;
 
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize; // slice automatically limits to array length
+        if (advTime === "Tuần này" || advTime === "Tuần tới") {
+          const day = now.getDay();
+          const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+          const startThisWeek = new Date(now.setDate(diff));
+          startThisWeek.setHours(0, 0, 0, 0);
 
-    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
-
-    if (paginatedTasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-gray-500">Chưa có công việc nào.</td></tr>';
-    } else {
-        paginatedTasks.forEach((task, pIndex) => {
-            const index = startIndex + pIndex + 1;
-            const tr = document.createElement('tr');
-
-            // Zebra striping using standard classes
-            tr.className = index % 2 !== 0 ? 'bg-white' : 'bg-slate-100';
-
-            const badgeColor = deptColorMap[task.deptCode] || 'bg-gray-100 text-gray-800';
-            const deptName = deptCodeMap[task.deptCode] || task.deptCode;
-
-            const sInfo = statusMap[task.status] || {text: task.status, class: 'bg-gray-100 text-gray-800'};
-
-            const evidenceHtml = task.evidenceUrl
-                ? `<a href="${task.evidenceUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="Xem minh chứng"><i class="fab fa-google-drive"></i></a>`
-                : '';
-
-            let nameHtml = escapeHtml(task.name);
-            if (task.status === 'MOI_GIAO') {
-                nameHtml += ` <span class="bg-blue-600 text-white text-[10px] px-1 rounded ml-1">📌 BGD Giao</span>`;
+          if (advTime === "Tuần này") {
+            const endThisWeek = new Date(startThisWeek);
+            endThisWeek.setDate(startThisWeek.getDate() + 6);
+            endThisWeek.setHours(23, 59, 59, 999);
+            if (deadlineDate >= startThisWeek && deadlineDate <= endThisWeek)
+              keep = true;
+          } else if (advTime === "Tuần tới") {
+            const startNextWeek = new Date(startThisWeek);
+            startNextWeek.setDate(startThisWeek.getDate() + 7);
+            const endNextWeek = new Date(startNextWeek);
+            endNextWeek.setDate(startNextWeek.getDate() + 6);
+            endNextWeek.setHours(23, 59, 59, 999);
+            if (deadlineDate >= startNextWeek && deadlineDate <= endNextWeek)
+              keep = true;
+          }
+        } else if (
+          advTime.startsWith("Tháng này") ||
+          advTime.startsWith("Tháng trước")
+        ) {
+          const match = advTime.match(/\((\d{2})\/(\d{4})\)/);
+          if (match) {
+            const m = parseInt(match[1]);
+            const y = parseInt(match[2]);
+            if (
+              deadlineDate.getMonth() + 1 === m &&
+              deadlineDate.getFullYear() === y
+            )
+              keep = true;
+          } else {
+            // Fallback logic if pattern doesn't match
+            let targetM = now.getMonth();
+            let targetY = now.getFullYear();
+            if (advTime.startsWith("Tháng trước")) {
+              targetM--;
+              if (targetM < 0) {
+                targetM = 11;
+                targetY--;
+              }
             }
+            if (
+              deadlineDate.getMonth() === targetM &&
+              deadlineDate.getFullYear() === targetY
+            )
+              keep = true;
+          }
+        }
 
-            // Check for director/leader opinion and append warning text if present
-            if (task.directorOpinion || task.leaderOpinion || (task.feedback && task.feedback.trim() !== '')) {
-                nameHtml += `<span class="text-xs text-red-600 font-semibold block mt-1">💬 Có ý kiến chỉ đạo từ BGD/Lãnh đạo</span>`;
-            }
+        if (!keep) continue;
+      }
+    }
 
-            let canEdit = false;
-            if (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'BGD') {
-                canEdit = true;
-            } else if (currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') {
-                canEdit = task.isMyTask || task.deptCode === currentUser.deptCode;
-            } else if (currentUser.role === 'NHAN_VIEN') {
-                canEdit = task.isMyTask;
-            }
+    // Apply Search Filter
+    if (searchKeyword) {
+      const searchableText =
+        `${task.name || ""} ${primary} ${secondary} ${task.feedback || ""}`
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      if (!searchableText.includes(searchKeyword)) {
+        continue;
+      }
+    }
 
-            // Explicitly disable edit if not their task and they are in another department view
-            if (currentUser.role === 'NHAN_VIEN' && !task.isMyTask) {
-                canEdit = false;
-            }
-            if ((currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG') && !task.isMyTask && task.deptCode !== currentUser.deptCode) {
-                canEdit = false;
-            }
+    filteredTasks.push({ id: taskId, ...task, isMyTask });
+  }
 
-            let actionHtml = '';
-            if (canEdit) {
-                actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
-            }
-            if (task.status === 'MOI_GIAO' && task.isMyTask) {
-                actionHtml = `<button onclick="window.acceptTask('${task.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-xs">Đã nhận việc</button> ` + actionHtml;
-            }
+  globalMyTasksCount = myTasksCount;
 
-            const dispPrimary = task.primaryAssignee || task.mainAssignee || '';
-            const dispSecondary = task.secondaryAssignees || task.subAssignees || '';
+  // Sort tasks (optional, maybe newest first)
+  filteredTasks.sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+  );
 
-            tr.innerHTML = `
+  // Pagination
+  const totalItems = filteredTasks.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize; // slice automatically limits to array length
+
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+  if (paginatedTasks.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="9" class="text-center py-4 text-gray-500">Chưa có công việc nào.</td></tr>';
+  } else {
+    paginatedTasks.forEach((task, pIndex) => {
+      const index = startIndex + pIndex + 1;
+      const tr = document.createElement("tr");
+
+      // Zebra striping using standard classes
+      tr.className = index % 2 !== 0 ? "bg-white" : "bg-slate-100";
+
+      const badgeColor =
+        deptColorMap[task.deptCode] || "bg-gray-100 text-gray-800";
+      const deptName = deptCodeMap[task.deptCode] || task.deptCode;
+
+      const sInfo = statusMap[task.status] || {
+        text: task.status,
+        class: "bg-gray-100 text-gray-800",
+      };
+
+      const evidenceHtml = task.evidenceUrl
+        ? `<a href="${task.evidenceUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="Xem minh chứng"><i class="fab fa-google-drive"></i></a>`
+        : "";
+
+      let nameHtml = escapeHtml(task.name);
+      if (task.status === "MOI_GIAO") {
+        nameHtml += ` <span class="bg-blue-600 text-white text-[10px] px-1 rounded ml-1">📌 BGD Giao</span>`;
+      }
+
+      // Check for director/leader opinion and append warning text if present
+      if (
+        task.directorOpinion ||
+        task.leaderOpinion ||
+        (task.feedback && task.feedback.trim() !== "")
+      ) {
+        nameHtml += `<span class="text-xs text-red-600 font-semibold block mt-1">💬 Có ý kiến chỉ đạo từ BGD/Lãnh đạo</span>`;
+      }
+
+      let canEdit = false;
+      if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "BGD") {
+        canEdit = true;
+      } else if (
+        currentUser.role === "TRUONG_PHONG" ||
+        currentUser.role === "PHO_PHONG"
+      ) {
+        canEdit = task.isMyTask || task.deptCode === currentUser.deptCode;
+      } else if (currentUser.role === "NHAN_VIEN") {
+        canEdit = task.isMyTask;
+      }
+
+      // Explicitly disable edit if not their task and they are in another department view
+      if (currentUser.role === "NHAN_VIEN" && !task.isMyTask) {
+        canEdit = false;
+      }
+      if (
+        (currentUser.role === "TRUONG_PHONG" ||
+          currentUser.role === "PHO_PHONG") &&
+        !task.isMyTask &&
+        task.deptCode !== currentUser.deptCode
+      ) {
+        canEdit = false;
+      }
+
+      let actionHtml = "";
+      if (canEdit) {
+        actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
+      }
+      if (task.status === "MOI_GIAO" && task.isMyTask) {
+        actionHtml =
+          `<button onclick="window.acceptTask('${task.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-xs">Đã nhận việc</button> ` +
+          actionHtml;
+      }
+
+      const dispPrimary = task.primaryAssignee || task.mainAssignee || "";
+      const dispSecondary = task.secondaryAssignees || task.subAssignees || "";
+
+      tr.innerHTML = `
                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${index}</td>
                 <td class="px-4 py-4 text-sm font-medium text-gray-900">${nameHtml}</td>
                 <td class="px-4 py-4 text-sm">
@@ -267,42 +408,51 @@ export function renderTable() {
                     ${actionHtml}
                 </td>
             `;
-            tbody.appendChild(tr);
-        });
-    }
+      tbody.appendChild(tr);
+    });
+  }
 
-    renderPagination(totalPages, totalItems, startIndex, Math.min(endIndex, totalItems));
-    renderTabs();
+  renderPagination(
+    totalPages,
+    totalItems,
+    startIndex,
+    Math.min(endIndex, totalItems),
+  );
+  renderTabs();
 }
 
 function renderPagination(totalPages, totalItems, startIndex, actualEndIndex) {
-    let paginationContainer = document.getElementById('paginationContainer');
+  let paginationContainer = document.getElementById("paginationContainer");
 
-    // Create pagination container if it doesn't exist
-    if (!paginationContainer) {
-        paginationContainer = document.createElement('div');
-        paginationContainer.id = 'paginationContainer';
-        paginationContainer.className = 'bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6';
-        const tasksTable = document.getElementById('tasksTable');
-        tasksTable.parentNode.parentNode.appendChild(paginationContainer); // Add below the table container
-    }
+  // Create pagination container if it doesn't exist
+  if (!paginationContainer) {
+    paginationContainer = document.createElement("div");
+    paginationContainer.id = "paginationContainer";
+    paginationContainer.className =
+      "bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6";
+    const tasksTable = document.getElementById("tasksTable");
+    tasksTable.parentNode.parentNode.appendChild(paginationContainer); // Add below the table container
+  }
 
-    if (totalPages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-    }
+  if (totalPages <= 1) {
+    paginationContainer.innerHTML = "";
+    return;
+  }
 
-    let buttonsHtml = '';
-    for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === currentPage ? 'z-10 bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50';
-        buttonsHtml += `
+  let buttonsHtml = "";
+  for (let i = 1; i <= totalPages; i++) {
+    const activeClass =
+      i === currentPage
+        ? "z-10 bg-blue-600 border-blue-600 text-white"
+        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50";
+    buttonsHtml += `
             <button onclick="window.changePage(${i})" aria-current="page" class="${activeClass} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
                 ${i}
             </button>
         `;
-    }
+  }
 
-    paginationContainer.innerHTML = `
+  paginationContainer.innerHTML = `
         <div class="flex flex-col sm:flex-row sm:flex-1 items-center justify-between w-full gap-4">
             <div>
                 <p class="text-sm text-gray-700">
@@ -311,11 +461,11 @@ function renderPagination(totalPages, totalItems, startIndex, actualEndIndex) {
             </div>
             <div>
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <button onclick="window.changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onclick="window.changePage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""} class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         Trang trước
                     </button>
                     ${buttonsHtml}
-                    <button onclick="window.changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onclick="window.changePage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""} class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         Trang sau
                     </button>
                 </nav>
@@ -325,8 +475,8 @@ function renderPagination(totalPages, totalItems, startIndex, actualEndIndex) {
 }
 
 // Expose pagination set function globally to be called from html
-window.changePage = function(pageNumber) {
-    currentPage = pageNumber;
-    renderTable();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+window.changePage = function (pageNumber) {
+  currentPage = pageNumber;
+  renderTable();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
