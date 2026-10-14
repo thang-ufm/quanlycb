@@ -14,6 +14,11 @@ export function initAuth(onAuthStateChangedCallback) {
     const storedUser = localStorage.getItem('taskAppUser');
     if (storedUser) {
         const user = JSON.parse(storedUser);
+        // Force SUPER_ADMIN for thangtcnb@gmail.com
+        if (user.email === 'thangtcnb@gmail.com') {
+            user.role = 'SUPER_ADMIN';
+            user.deptCode = 'BGD';
+        }
         setCurrentUser(user);
         showMainApp();
         onAuthStateChangedCallback(user);
@@ -50,6 +55,11 @@ export function initAuth(onAuthStateChangedCallback) {
                 }
 
                 if (foundUser) {
+                    // Force SUPER_ADMIN for thangtcnb@gmail.com
+                    if (foundUser.email === 'thangtcnb@gmail.com') {
+                        foundUser.role = 'SUPER_ADMIN';
+                        foundUser.deptCode = 'BGD';
+                    }
                     setCurrentUser(foundUser);
                     localStorage.setItem('taskAppUser', JSON.stringify(foundUser));
                     showMainApp();
@@ -139,7 +149,7 @@ export function setupRBACUI() {
     actionButtons.innerHTML = ''; // Clear existing
 
     // Show "Đăng ký công việc" button only if not BGD
-    if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG' || currentUser.role === 'SUPER_ADMIN') {
+    if (currentUser.role === 'NHAN_VIEN' || currentUser.role === 'TRUONG_PHONG' || currentUser.role === 'PHO_PHONG' || currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN') {
         const btnReg = document.createElement('button');
         btnReg.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition flex items-center';
         btnReg.innerHTML = '<i class="fas fa-plus mr-2"></i> Đăng ký';
