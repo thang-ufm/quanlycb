@@ -341,11 +341,7 @@ export function renderTable() {
       }
 
       // Check for director/leader opinion and append warning text if present
-      if (
-        task.directorOpinion ||
-        task.leaderOpinion ||
-        (task.feedback && task.feedback.trim() !== "")
-      ) {
+      if (task.directorOpinion) {
         nameHtml += `<span class="text-xs text-red-600 font-semibold block mt-1">💬 Có ý kiến chỉ đạo từ BGD/Lãnh đạo</span>`;
       }
 

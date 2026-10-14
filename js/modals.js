@@ -80,9 +80,9 @@ export function openWeeklyTaskModal() {
   document.getElementById("weekSelection").value =
     `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, "0")}`;
 
-  // Clear existing and add 3 default rows
+  // Clear existing and add 1 default row
   batchTaskRows.innerHTML = "";
-  for (let i = 0; i < 3; i++) addWeeklyTaskRow();
+  addWeeklyTaskRow();
 }
 
 function addWeeklyTaskRow() {
@@ -133,7 +133,7 @@ function addWeeklyTaskRow() {
         </td>
         <td class="px-2 py-2"><input type="date" class="w-full border-gray-300 rounded text-sm task-deadline" required></td>
         <td class="px-2 py-2 text-center">
-            <button type="button" class="text-red-500 hover:text-red-700 btn-delete-row"><i class="fas fa-trash"></i></button>
+            <button type="button" class="text-red-500 hover:text-red-700 btn-delete-row" title="Xóa dòng này">🗑️</button>
         </td>
     `;
 
@@ -488,7 +488,7 @@ export function setupModals() {
         modalWeeklyTask.classList.add("hidden");
         // Clear forms right away
         batchTaskRows.innerHTML = "";
-        for (let i = 0; i < 3; i++) addWeeklyTaskRow();
+        addWeeklyTaskRow();
       } catch (err) {
         console.error("Error saving tasks: ", err);
         alert("Có lỗi xảy ra khi lưu dữ liệu.");
@@ -598,6 +598,14 @@ export function setupModals() {
           }
       }
 
+      if (currentUser && (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN')) {
+          if (feedback.trim() !== '') {
+              updateData.directorOpinion = true;
+          } else {
+              updateData.directorOpinion = false;
+          }
+      }
+
       if (parseInt(progress) === 100) updateData.status = "HOAN_THANH";
 
       try {
@@ -614,11 +622,23 @@ export function setupModals() {
     ?.addEventListener("click", async () => {
       const taskId = document.getElementById("editTaskId").value;
       const feedback = document.getElementById("editFeedback").value;
-      try {
-        await update(ref(database, "tasks/" + taskId), {
+
+      const updateObj = {
           status: "DANG_THUC_HIEN",
           feedback,
-        });
+      };
+
+      const currentUser = getCurrentUser();
+      if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN') {
+          if (feedback.trim() !== '') {
+              updateObj.directorOpinion = true;
+          } else {
+              updateObj.directorOpinion = false; // or null if we prefer
+          }
+      }
+
+      try {
+        await update(ref(database, "tasks/" + taskId), updateObj);
         document.getElementById("modalEditTask").classList.add("hidden");
       } catch (e) {
         console.error(e);
@@ -635,11 +655,19 @@ export function setupModals() {
         alert("Vui lòng nhập lý do yêu cầu sửa!");
         return;
       }
-      try {
-        await update(ref(database, "tasks/" + taskId), {
+
+      const updateObj = {
           status: "YEU_CAU_SUA",
           feedback,
-        });
+      };
+
+      const currentUser = getCurrentUser();
+      if (currentUser.role === 'BGD' || currentUser.role === 'SUPER_ADMIN') {
+          updateObj.directorOpinion = true;
+      }
+
+      try {
+        await update(ref(database, "tasks/" + taskId), updateObj);
         document.getElementById("modalEditTask").classList.add("hidden");
       } catch (e) {
         console.error(e);

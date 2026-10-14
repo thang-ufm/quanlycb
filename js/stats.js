@@ -8,6 +8,16 @@ export function updateStatisticsCards() {
 
     let total = 0, completed = 0, inProgress = 0, overdue = 0;
 
+    const timeRange = document.getElementById('exportTimeRange') ? document.getElementById('exportTimeRange').value : 'ALL';
+    const startDate = document.getElementById('exportStartDate') ? document.getElementById('exportStartDate').value : null;
+    const endDate = document.getElementById('exportEndDate') ? document.getElementById('exportEndDate').value : null;
+    let startObj = null, endObj = null;
+    if (timeRange === 'CUSTOM' && startDate && endDate) {
+        startObj = new Date(startDate);
+        endObj = new Date(endDate);
+        endObj.setHours(23, 59, 59, 999);
+    }
+
     for (const [taskId, task] of Object.entries(allTasks)) {
         const primary = task.primaryAssignee || task.mainAssignee || '';
         const secondary = task.secondaryAssignees || task.subAssignees || '';
@@ -22,6 +32,50 @@ export function updateStatisticsCards() {
             shouldCount = isMyTask || task.deptCode === currentUser.deptCode;
         } else {
             shouldCount = true; // BGD, SUPER_ADMIN
+        }
+
+        // Apply Time Filter matching the logic in export
+        let taskDateStr = task.createdAt || task.deadline;
+        if (taskDateStr && shouldCount) {
+            let taskDate = new Date(taskDateStr);
+            let inRange = false;
+            let today = new Date();
+
+            if (timeRange === 'ALL') {
+                inRange = true; // Fallback
+            } else if (timeRange === 'WEEK') {
+                const dayNum = today.getUTCDay() || 7;
+                today.setUTCDate(today.getUTCDate() + 4 - dayNum);
+                const yearStart = new Date(Date.UTC(today.getUTCFullYear(),0,1));
+                const weekNoCurrent = Math.ceil((((today - yearStart) / 86400000) + 1)/7);
+
+                let taskD = new Date(taskDateStr);
+                const taskDayNum = taskD.getUTCDay() || 7;
+                taskD.setUTCDate(taskD.getUTCDate() + 4 - taskDayNum);
+                const taskYearStart = new Date(Date.UTC(taskD.getUTCFullYear(),0,1));
+                const weekNoTask = Math.ceil((((taskD - taskYearStart) / 86400000) + 1)/7);
+
+                if(weekNoTask === weekNoCurrent && taskD.getUTCFullYear() === today.getUTCFullYear()) inRange = true;
+
+            } else if (timeRange === 'MONTH') {
+                if (taskDate.getMonth() === today.getMonth() && taskDate.getFullYear() === today.getFullYear()) {
+                    inRange = true;
+                }
+            } else if (timeRange === 'QUARTER') {
+                const currentQuarter = Math.floor(today.getMonth() / 3) + 1;
+                const taskQuarter = Math.floor(taskDate.getMonth() / 3) + 1;
+                if (taskQuarter === currentQuarter && taskDate.getFullYear() === today.getFullYear()) {
+                    inRange = true;
+                }
+            } else if (timeRange === 'CUSTOM') {
+                if (startObj && endObj && taskDate >= startObj && taskDate <= endObj) {
+                    inRange = true;
+                }
+            }
+
+            if (!inRange) {
+                shouldCount = false;
+            }
         }
 
         if (shouldCount) {
@@ -77,7 +131,11 @@ export function setupExport() {
         } else {
             customRange.classList.add('hidden');
         }
+        updateStatisticsCards();
     });
+
+    document.getElementById('exportStartDate')?.addEventListener('change', updateStatisticsCards);
+    document.getElementById('exportEndDate')?.addEventListener('change', updateStatisticsCards);
 
     document.getElementById('btnExportExcelNew')?.addEventListener('click', () => {
         const allTasks = getAllTasks();
