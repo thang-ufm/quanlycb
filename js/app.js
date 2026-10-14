@@ -18,6 +18,7 @@ import { database } from "./firebase-config.js";
 import {
   ref,
   update,
+  remove,
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Ensure global functions are attached to window for backward compatibility with HTML inline handlers
@@ -44,6 +45,18 @@ window.acceptTask = async function (taskId) {
     } catch (e) {
       console.error(e);
       alert("Lỗi cập nhật trạng thái");
+    }
+  }
+};
+
+window.deleteTask = async function (taskId) {
+  if (confirm("Bạn có chắc chắn muốn xóa công việc này?")) {
+    try {
+      await remove(ref(database, "tasks/" + taskId));
+      alert("Xóa công việc thành công!");
+    } catch (e) {
+      console.error(e);
+      alert("Lỗi xóa công việc");
     }
   }
 };

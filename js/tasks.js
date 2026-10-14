@@ -376,12 +376,17 @@ export function renderTable() {
 
       let actionHtml = "";
       if (canEdit) {
-        actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1"><i class="fas fa-edit"></i></button>`;
+        actionHtml = `<button onclick="window.openEditModal('${task.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded px-2 py-1" title="Sửa"><i class="fas fa-edit"></i></button>`;
       }
       if (task.status === "MOI_GIAO" && task.isMyTask) {
         actionHtml =
           `<button onclick="window.acceptTask('${task.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-xs">Đã nhận việc</button> ` +
           actionHtml;
+      }
+
+      // Admin delete button
+      if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "BGD") {
+          actionHtml += ` <button onclick="window.deleteTask('${task.id}')" class="text-red-600 hover:text-red-900 bg-red-50 rounded px-2 py-1" title="Xóa"><i class="fas fa-trash"></i></button>`;
       }
 
       const dispPrimary = task.primaryAssignee || task.mainAssignee || "";

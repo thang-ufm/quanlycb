@@ -94,6 +94,7 @@ function addWeeklyTaskRow() {
   const index = batchTaskRows.children.length + 1;
 
   let subOptions = "";
+  let mainOptions = "";
   for (const key in allUsers) {
     const u = allUsers[key];
     if (u.deptCode === "HCTV" || u.deptCode === "DT_KH_QLSV") {
@@ -101,12 +102,18 @@ function addWeeklyTaskRow() {
                 <input type="checkbox" class="mr-2 task-sub-checkbox" value="${u.fullName}">${u.fullName} (${u.deptCode})
             </label>`;
     }
+    mainOptions += `<option value="${u.fullName}" ${u.fullName === currentUser.fullName ? "selected" : ""}>${u.fullName} (${u.deptCode})</option>`;
+  }
+
+  let mainAssigneeInput = `<input type="text" class="w-full bg-gray-100 border-gray-300 rounded text-sm task-main text-gray-600" required readonly value="${currentUser.fullName}">`;
+  if (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'BGD') {
+      mainAssigneeInput = `<select class="w-full border-gray-300 rounded text-sm task-main">${mainOptions}</select>`;
   }
 
   tr.innerHTML = `
         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-500">${index}</td>
         <td class="px-2 py-2"><input type="text" class="w-full border-gray-300 rounded text-sm task-name" required></td>
-        <td class="px-2 py-2"><input type="text" class="w-full bg-gray-100 border-gray-300 rounded text-sm task-main text-gray-600" required readonly value="${currentUser.fullName}"></td>
+        <td class="px-2 py-2">${mainAssigneeInput}</td>
         <td class="px-2 py-2">
             <div class="relative custom-dropdown-container">
                 <button type="button" class="w-full border border-gray-300 rounded text-sm py-1 px-2 text-left bg-white text-gray-700 toggle-dropdown flex justify-between items-center">
@@ -259,6 +266,15 @@ export function openEditModal(taskId) {
   btnReject.classList.add("hidden");
   feedbackArea.classList.add("hidden");
 
+  const editMainAssigneeContainer = document.getElementById("editMainAssigneeContainer");
+  const editMainAssignee = document.getElementById("editMainAssignee");
+  const editTaskName = document.getElementById("editTaskName");
+
+  if (editMainAssigneeContainer) {
+      editMainAssigneeContainer.classList.add("hidden");
+  }
+  editTaskName.readOnly = true;
+
   // Check if the current user is an assignee
   const primary = task.primaryAssignee || task.mainAssignee || "";
   const secondary = task.secondaryAssignees || task.subAssignees || "";
@@ -307,6 +323,27 @@ export function openEditModal(taskId) {
       btnApprove.classList.remove("hidden");
       btnReject.classList.remove("hidden");
     }
+  }
+
+  // Admin Super Powers
+  if (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'BGD') {
+      document.getElementById("editStatus").disabled = false;
+      document.getElementById("editProgress").disabled = false;
+      document.getElementById("editEvidence").disabled = false;
+      document.getElementById("editFeedback").disabled = false;
+      editTaskName.readOnly = false;
+      btnSave.classList.remove("hidden");
+
+      if (editMainAssigneeContainer && editMainAssignee) {
+          editMainAssigneeContainer.classList.remove("hidden");
+          editMainAssignee.innerHTML = "";
+          const allUsers = getAllUsers();
+          for (const key in allUsers) {
+              const u = allUsers[key];
+              const selected = (u.fullName === task.mainAssignee || u.fullName === task.primaryAssignee) ? "selected" : "";
+              editMainAssignee.innerHTML += `<option value="${u.fullName}" ${selected}>${u.fullName} (${u.deptCode})</option>`;
+          }
+      }
   }
 
   modal.classList.remove("hidden");
@@ -360,9 +397,10 @@ export function setupModals() {
     .getElementById("btnAddRow")
     ?.addEventListener("click", addWeeklyTaskRow);
 
-  document
-    .getElementById("btnSubmitWeekly")
-    ?.addEventListener("click", async () => {
+  const btnSubmitWeekly = document.getElementById("btnSubmitWeekly");
+  if (btnSubmitWeekly && !btnSubmitWeekly.dataset.initialized) {
+    btnSubmitWeekly.dataset.initialized = "true";
+    btnSubmitWeekly.addEventListener("click", async () => {
       const currentUser = getCurrentUser();
       const batchTaskRows = document.getElementById("batchTaskRows");
       const regType = document.getElementById("regTypeSelection").value;
@@ -389,6 +427,8 @@ export function setupModals() {
         }
         periodValue = `${q}-${y}`;
       }
+
+      btnSubmitWeekly.disabled = true;
 
       const rows = batchTaskRows.querySelectorAll("tr");
       let hasError = false;
@@ -434,6 +474,7 @@ export function setupModals() {
         alert(
           "Vui lòng điền đầy đủ Tên công việc, Phụ trách chính và Hạn chót ở tất cả các dòng.",
         );
+        btnSubmitWeekly.disabled = false;
         return;
       }
 
@@ -445,19 +486,27 @@ export function setupModals() {
         }
         alert("Đăng ký công việc thành công!");
         modalWeeklyTask.classList.add("hidden");
+        // Clear forms right away
+        batchTaskRows.innerHTML = "";
+        for (let i = 0; i < 3; i++) addWeeklyTaskRow();
       } catch (err) {
         console.error("Error saving tasks: ", err);
         alert("Có lỗi xảy ra khi lưu dữ liệu.");
+      } finally {
+        btnSubmitWeekly.disabled = false;
       }
     });
+  }
 
   document
     .getElementById("assignType")
     ?.addEventListener("change", populateAssignTarget);
 
-  document
-    .getElementById("btnSubmitAssign")
-    ?.addEventListener("click", async () => {
+  const btnSubmitAssign = document.getElementById("btnSubmitAssign");
+  if (btnSubmitAssign && !btnSubmitAssign.dataset.initialized) {
+    btnSubmitAssign.dataset.initialized = "true";
+    btnSubmitAssign.addEventListener("click", async () => {
+      btnSubmitAssign.disabled = true;
       const type = document.getElementById("assignType").value;
       const target = document.getElementById("assignTarget").value;
       const name = document.getElementById("assignTaskName").value.trim();
@@ -478,6 +527,7 @@ export function setupModals() {
 
       if (!name || !deadline) {
         alert("Vui lòng nhập đầy đủ thông tin Tên công việc và Hạn chót!");
+        btnSubmitAssign.disabled = false;
         return;
       }
 
@@ -509,8 +559,11 @@ export function setupModals() {
       } catch (e) {
         console.error("Error creating task: ", e);
         alert("Có lỗi xảy ra khi tạo công việc mới.");
+      } finally {
+        btnSubmitAssign.disabled = false;
       }
     });
+  }
 
   document
     .getElementById("btnSaveTask")
@@ -521,15 +574,34 @@ export function setupModals() {
       let status = document.getElementById("editStatus").value;
       const feedback = document.getElementById("editFeedback").value;
 
-      if (parseInt(progress) === 100) status = "HOAN_THANH";
-
-      try {
-        await update(ref(database, "tasks/" + taskId), {
+      const updateData = {
           progress,
           evidenceUrl,
           status,
           feedback,
-        });
+      };
+
+      const currentUser = getCurrentUser();
+      if (currentUser && (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'BGD')) {
+          const newName = document.getElementById("editTaskName").value.trim();
+          if (newName) updateData.name = newName;
+
+          const editMainAssigneeContainer = document.getElementById("editMainAssigneeContainer");
+          const editMainAssignee = document.getElementById("editMainAssignee");
+
+          if (editMainAssigneeContainer && !editMainAssigneeContainer.classList.contains('hidden') && editMainAssignee) {
+             const newAssignee = editMainAssignee.value;
+             if (newAssignee) {
+                 updateData.mainAssignee = newAssignee;
+                 updateData.primaryAssignee = newAssignee;
+             }
+          }
+      }
+
+      if (parseInt(progress) === 100) updateData.status = "HOAN_THANH";
+
+      try {
+        await update(ref(database, "tasks/" + taskId), updateData);
         document.getElementById("modalEditTask").classList.add("hidden");
       } catch (e) {
         console.error(e);
